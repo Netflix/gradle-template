@@ -58,6 +58,6 @@ release {
     failOnPublishNeeded=false
     failOnUnversionedFiles=false
     failOnUpdateNeeded=false
-    requireBranch = 'single-project-test'
+    requireBranch = null
 }
 

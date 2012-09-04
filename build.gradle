@@ -1,6 +1,8 @@
 // Establish version and status
 ext.githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
 
+group = 'com.netflix.gradle'
+
 buildscript {
     repositories { mavenCentral() }
     apply from: file('gradle/buildscript.gradle'), to: buildscript 
