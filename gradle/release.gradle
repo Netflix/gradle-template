@@ -54,11 +54,10 @@ ext.'gradle.release.useAutomaticVersion' = "true"
 
 release {
     // http://tellurianring.com/wiki/gradle/release
-    failOnCommitNeeded=true
-    failOnPublishNeeded=true
-    failOnUnversionedFiles=true
-    failOnUpdateNeeded=true
-}
-release {
+    failOnCommitNeeded=false
+    failOnPublishNeeded=false
+    failOnUnversionedFiles=false
+    failOnUpdateNeeded=false
     requireBranch = 'single-project-test'
 }
+
