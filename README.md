@@ -83,3 +83,9 @@ When publishing to Maven Central, we need a few "secrets" to sign the artifacts 
     signing.password = youShouldSetThis
     sonatypeUsername = jiraSonaTypeUser
     sonatypePassword = CTheTrees
+
+## Additional Customizations
+
+### Documentation
+
+By default javadoc is setup for each project, and in the case of a multi-project there is a aggregateJavadoc and aggregateScaladoc task
