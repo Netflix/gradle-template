@@ -5,7 +5,10 @@ group = "com.netflix.${githubProjectName}"
 group = 'com.netflix.gradle'
 
 buildscript {
-    repositories { mavenRepo url: 'http://jcenter.bintray.com' }
+    repositories {
+        mavenLocal()
+        maven { url 'http://jcenter.bintray.com' }
+    }
     apply from: file('gradle/buildscript.gradle'), to: buildscript 
 }
 
