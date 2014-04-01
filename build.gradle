@@ -1,52 +1,135 @@
-// Establish version and status
-ext.githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
+ext.githubProjectName = 'ReactiveLab'
+
+apply from: file('gradle/convention.gradle')
+apply from: file('gradle/maven.gradle')
+//apply from: file('gradle/check.gradle')
+apply from: file('gradle/license.gradle')
+apply from: file('gradle/release.gradle')
 
 buildscript {
     repositories {
         mavenLocal()
-        mavenCentral() // maven { url 'http://jcenter.bintray.com' }
+        mavenCentral()
+        jcenter()
     }
-    apply from: file('gradle/buildscript.gradle'), to: buildscript 
+
+    apply from: file('gradle/buildscript.gradle'), to: buildscript
 }
 
 allprojects {
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
     repositories { 
         mavenLocal()
-        mavenCentral() // maven { url: 'http://jcenter.bintray.com' }
+        mavenCentral()
     }
 }
-
-apply from: file('gradle/convention.gradle')
-apply from: file('gradle/maven.gradle')
-apply from: file('gradle/check.gradle')
-apply from: file('gradle/license.gradle')
-apply from: file('gradle/release.gradle')
 
 subprojects {
-    group = "com.netflix.${githubProjectName}" // TEMPLATE: Set to organization of project
-
-    dependencies {
-        compile     'javax.ws.rs:jsr311-api:1.1.1'
-        compile     'com.sun.jersey:jersey-core:1.11'
-        testCompile 'org.testng:testng:6.1.1'
-        testCompile 'org.mockito:mockito-core:1.8.5'
-    }
-}
-
-project(':template-client') {
     apply plugin: 'java'
-    dependencies {
-        compile 'org.slf4j:slf4j-api:1.6.3'
-        compile 'com.sun.jersey:jersey-client:1.11'
-    }
-}
+    apply plugin: 'shadow'
+    group = "io.reactivex.lab"
 
-project(':template-server') {
-    apply plugin: 'war'
-    apply plugin: 'jetty'
-    dependencies {
-        compile 'com.sun.jersey:jersey-server:1.11'
-        compile 'com.sun.jersey:jersey-servlet:1.11'
-        compile project(':template-client')
+    // make 'examples' use the same classpath
+    configurations { 
+        examplesCompile.extendsFrom compile
+        examplesRuntime.extendsFrom runtime
+        perfCompile.extendsFrom compile
+        perfRuntime.extendsFrom runtime
     }
+
+
+    tasks.withType(Javadoc).each {
+        it.classpath = sourceSets.main.compileClasspath
+    }
+
+    sourceSets {
+        examples
+        perf {
+            compileClasspath += sourceSets.main.output
+        }
+    }
+
+    tasks.build { 
+        //include 'examples' in build task
+        dependsOn(examplesClasses)
+        dependsOn(perfClasses)
+    }
+
+    task perfJar(type: Jar, dependsOn: perfClasses) {
+        from sourceSets.perf.output + sourceSets.main.output
+    }
+
+    dependencies {
+        perfCompile 'org.openjdk.jmh:jmh-core:0.5.3'
+        perfCompile 'org.openjdk.jmh:jmh-generator-annprocess:0.5.3'
+        //perfCompile project
+    }
+
+    artifacts {
+        perfRuntime perfJar
+    }
+    
+    eclipse {  
+        classpath {
+            plusConfigurations += configurations.perfCompile
+            
+            downloadSources = true
+            downloadJavadoc = true
+        }
+    }
+
+    /**
+     * By default: Run without arguments this will execute all benchmarks that are found (can take a long time).
+     *
+     * Optionally pass arguments for custom execution. Example:
+     *
+     *  ../gradlew benchmarks '-Pjmh=-f 1 -tu ns -bm avgt -wi 5 -i 5 -r 1 .*OperatorSerializePerf.*'
+     *
+     * To see all options:
+     *
+     *  ../gradlew benchmarks '-Pjmh=-h'
+     */
+    task benchmarks(type: JavaExec) {
+        main = 'org.openjdk.jmh.Main'
+        classpath = sourceSets.perf.runtimeClasspath + sourceSets.main.output
+        maxHeapSize = "512m"
+
+        if (project.hasProperty('jmh')) {
+            args(jmh.split(' '))
+        } else {
+            //args '-h' // help output
+            args '-f' // fork
+            args '1'
+            args '-tu' // time unit
+            args 'ns'
+            args '-bm' // benchmark mode
+            args 'avgt'
+            args '-wi' // warmup iterations
+            args '5'
+            args '-i' // test iterations
+            args '5'
+            args '-r' // time per execution in seconds
+            args '5'
+            //args '-prof' // profilers
+            //args 'HS_GC' // HotSpot (tm) memory manager (GC) profiling via implementation-specific MBeans
+            //args 'HS_RT' // HotSpot (tm) runtime profiling via implementation-specific MBeans
+            //args 'HS_THR' // HotSpot (tm) threading subsystem via implementation-specific MBeans
+            //args 'HS_COMP' // HotSpot (tm) JIT compiler profiling via implementation-specific MBeans
+            //args 'HS_CL' // HotSpot (tm) classloader profiling via implementation-specific MBeans
+            //args 'STACK' // Simple and naive Java stack profiler
+            args '.*OperatorSerializePerf.*' // for running only a specific test
+        }
+    }
+
+    shadow {
+        classifier = "benchmarks"
+        includeDependenciesFor = ["runtime", "perfRuntime"]
+
+        transformer(com.github.jengelman.gradle.plugins.shadow.transformers.ManifestResourceTransformer) {
+            mainClass = "org.openjdk.jmh.Main"
+        }
+    }
+
+    shadowJar.dependsOn perfJar
 }
