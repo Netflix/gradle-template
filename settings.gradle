@@ -1,2 +1,2 @@
 rootProject.name='ReactiveLab'
-include 'rl-discovery-client','rl-discovery-server', 'rl-middle-tier', 'rl-edge-tier'
+include 'rl-middle-tier', 'rl-edge-tier'
