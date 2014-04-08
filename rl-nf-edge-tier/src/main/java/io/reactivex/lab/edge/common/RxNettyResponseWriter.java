@@ -35,7 +35,6 @@ public class RxNettyResponseWriter extends Writer {
 
     @Override
     public void flush() throws IOException {
-        System.out.println("flush");
         response.flush();
     }
 

@@ -1,15 +1,33 @@
 package io.reactivex.lab.middle.nf.services;
 
+import io.reactivex.lab.common.SimpleJson;
 import io.reactivex.lab.middle.nf.MiddleTierService;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
+import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import rx.Observable;
 
 public class GeoService extends MiddleTierService {
 
     @Override
-    protected Observable<Void> handleRequest(HttpServerRequest<?> request, HttpServerResponse<?> response) {
-        // TODO Auto-generated method stub
-        return null;
+    protected Observable<Void> handleRequest(HttpServerRequest<?> request, HttpServerResponse<ServerSentEvent> response) {
+        return request.getContent().flatMap(i -> {
+            List<String> ips = request.getQueryParameters().get("ip");
+            Map<String, Object> data = new HashMap<>();
+            for (String ip : ips) {
+                Map<String, Object> ip_data = new HashMap<>();
+                ip_data.put("country_code", "GB");
+                ip_data.put("longitude", "-0.13");
+                ip_data.put("latitude", "51.5");
+                data.put(ip, ip_data);
+            }
+            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(data)));
+        }).delay(10, TimeUnit.MILLISECONDS);
     }
 }
