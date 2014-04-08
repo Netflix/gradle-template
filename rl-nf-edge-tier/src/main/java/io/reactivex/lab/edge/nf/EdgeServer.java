@@ -31,6 +31,9 @@ public class EdgeServer {
                         error.printStackTrace();
                         return writeError(request, response, "Failed: " + error.getMessage());
                     });
+                } else if (request.getPath().endsWith(".js")) {
+                    System.out.println("Server => Javascript Request: " + request.getPath());
+                    return JavascriptRuntime.getInstance().handleRequest(request, response);
                 } else {
                     return writeError(request, response, "Unknown path: " + request.getPath());
                 }
