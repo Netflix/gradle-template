@@ -1,11 +1,9 @@
 package io.reactivex.lab.edge.nf.clients;
 
-import io.netty.buffer.ByteBuf;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.lab.edge.nf.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.edge.nf.clients.RatingsCommand.Rating;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 
 import java.util.Arrays;
@@ -32,7 +30,7 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
 
     @Override
     protected Observable<Rating> run() {
-        return RxNetty.createHttpClient("localhost", 9193, PipelineConfigurators.<ByteBuf> sseClientConfigurator())
+        return RxNettySSE.createHttpClient("localhost", 9193)
                 .submit(HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<Rating> bytesToJson = r.getContent().map(sse -> {

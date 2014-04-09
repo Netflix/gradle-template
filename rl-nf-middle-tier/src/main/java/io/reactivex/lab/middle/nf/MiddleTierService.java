@@ -2,8 +2,7 @@ package io.reactivex.lab.middle.nf;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
+import io.reactivex.lab.common.RxNettySSE;
 import io.reactivex.netty.protocol.http.server.HttpServer;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
@@ -14,7 +13,7 @@ public abstract class MiddleTierService {
 
     public HttpServer<ByteBuf, ServerSentEvent> createServer(int port) {
         System.out.println("Start " + getClass().getSimpleName() + " on port: " + port);
-        return RxNetty.createHttpServer(port, (request, response) -> {
+        return RxNettySSE.createHttpServer(port, (request, response) -> {
             System.out.println("Server => Request: " + request.getPath());
             try {
                 return handleRequest(request, response);
@@ -24,7 +23,7 @@ public abstract class MiddleTierService {
                 response.setStatus(HttpResponseStatus.BAD_REQUEST);
                 return response.writeAndFlush(new ServerSentEvent("1", "data:", "Error 500: Bad Request\n" + e.getMessage() + "\n"));
             }
-        }, PipelineConfigurators.<ByteBuf> sseServerConfigurator());
+        });
     }
 
     protected abstract Observable<Void> handleRequest(HttpServerRequest<?> request, HttpServerResponse<ServerSentEvent> response);

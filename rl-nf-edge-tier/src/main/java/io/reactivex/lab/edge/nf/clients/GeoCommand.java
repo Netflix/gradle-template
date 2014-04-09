@@ -1,12 +1,9 @@
 package io.reactivex.lab.edge.nf.clients;
 
-import io.netty.buffer.ByteBuf;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.lab.edge.nf.clients.GeoCommand.GeoIP;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
-import io.reactivex.netty.protocol.http.client.HttpClientResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +24,7 @@ public class GeoCommand extends HystrixObservableCommand<GeoIP> {
 
     @Override
     protected Observable<GeoIP> run() {
-        return RxNetty.createHttpClient("localhost", 9191, PipelineConfigurators.<ByteBuf> sseClientConfigurator())
+        return RxNettySSE.createHttpClient("localhost", 9191)
                 .submit(HttpClientRequest.createGet("/geo?" + UrlGenerator.generate("ip", ips)))
                 .flatMap(r -> {
                     Observable<GeoIP> bytesToJson = r.getContent().map(sse -> {

@@ -1,11 +1,9 @@
 package io.reactivex.lab.edge.nf.clients;
 
-import io.netty.buffer.ByteBuf;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.lab.edge.nf.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.edge.nf.clients.VideoMetadataCommand.VideoMetadata;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 
 import java.util.Arrays;
@@ -33,7 +31,7 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
 
     @Override
     protected Observable<VideoMetadata> run() {
-        return RxNetty.createHttpClient("localhost", 9196, PipelineConfigurators.<ByteBuf> sseClientConfigurator())
+        return RxNettySSE.createHttpClient("localhost", 9196)
                 .submit(HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<VideoMetadata> bytesToJson = r.getContent().map(sse -> {

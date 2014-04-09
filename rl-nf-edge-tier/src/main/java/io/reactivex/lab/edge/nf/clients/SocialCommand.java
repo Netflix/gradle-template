@@ -1,13 +1,10 @@
 package io.reactivex.lab.edge.nf.clients;
 
-import io.netty.buffer.ByteBuf;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.lab.edge.nf.clients.SocialCommand.Social;
 import io.reactivex.lab.edge.nf.clients.UserCommand.User;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
-import io.reactivex.netty.protocol.http.client.HttpClientResponse;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +31,7 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
 
     @Override
     protected Observable<Social> run() {
-        return RxNetty.createHttpClient("localhost", 9194, PipelineConfigurators.<ByteBuf> sseClientConfigurator())
+        return RxNettySSE.createHttpClient("localhost", 9194)
                 .submit(HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users)))
                 .flatMap(r -> {
                     Observable<Social> bytesToJson = r.getContent().map(sse -> {

@@ -1,10 +1,10 @@
 package io.reactivex.lab.edge.nf.clients;
 
 import io.netty.buffer.ByteBuf;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.lab.edge.nf.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.edge.nf.clients.PersonalizedCatalogCommand.Video;
-import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 
@@ -33,7 +33,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
     @Override
     protected Observable<Bookmark> run() {
-        return RxNetty.createHttpClient("localhost", 9190, PipelineConfigurators.<ByteBuf> sseClientConfigurator())
+        return RxNettySSE.createHttpClient("localhost", 9190)
                 .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<Bookmark> bytesToJson = r.getContent().map(sse -> {

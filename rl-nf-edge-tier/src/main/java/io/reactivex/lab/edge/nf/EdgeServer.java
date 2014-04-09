@@ -1,9 +1,7 @@
 package io.reactivex.lab.edge.nf;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
+import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
@@ -23,7 +21,7 @@ public class EdgeServer {
         startHystrixMetricsStream();
 
         // start web services => http://localhost:8080
-        RxNetty.createHttpServer(8080, (request, response) -> {
+        RxNettySSE.createHttpServer(8080, (request, response) -> {
             System.out.println("Server => Request: " + request.getPath());
             try {
                 if (request.getPath().equals("/device/home")) {
@@ -42,11 +40,11 @@ public class EdgeServer {
                 response.setStatus(HttpResponseStatus.BAD_REQUEST);
                 return response.writeStringAndFlush("Error 500: Bad Request\n" + e.getMessage() + "\n");
             }
-        }, PipelineConfigurators.<ByteBuf> sseServerConfigurator()).startAndWait();
+        }).startAndWait();
     }
 
     private static void startHystrixMetricsStream() {
-        RxNetty.createHttpServer(9999, (request, response) -> {
+        RxNettySSE.createHttpServer(9999, (request, response) -> {
             System.out.println("Start Hystrix Stream");
             response.getHeaders().add("content-type", "text/event-stream");
             return Observable.create((Subscriber<? super Void> s) -> {
@@ -65,7 +63,7 @@ public class EdgeServer {
                             });
                 }).subscribe());
             });
-        }, PipelineConfigurators.<ByteBuf> sseServerConfigurator()).start();
+        }).start();
     }
 
     final static Observable<String> streamPoller = Observable.create((Subscriber<? super String> s) -> {
