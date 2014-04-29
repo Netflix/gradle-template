@@ -1,2 +1,2 @@
 rootProject.name='ReactiveLab'
-include 'rl-basic-middle-tier', 'rl-basic-edge-tier', 'rl-nf-middle-tier', 'rl-nf-edge-tier'
+include 'reactive-lab-services', 'reactive-lab-edge'
