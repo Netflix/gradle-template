@@ -35,7 +35,7 @@ public class JavascriptRuntime {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Observable<Void> handleRequest(HttpServerRequest<ByteBuf> request, HttpServerResponse<ServerSentEvent> response) {
+    public Observable<Void> handleRequest(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
         try {
             Invocable i = loadEndpoint(request.getPath().substring(1));
             response.setStatus(HttpResponseStatus.OK);

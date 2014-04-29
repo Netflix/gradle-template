@@ -2,15 +2,15 @@ package io.reactivex.lab.edge.routes;
 
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.edge.EdgeServer;
-import io.reactivex.lab.edge.clients.BookmarksCommand;
+import io.reactivex.lab.edge.clients.BookmarkCommand;
+import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand;
+import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.edge.clients.RatingsCommand;
+import io.reactivex.lab.edge.clients.RatingsCommand.Rating;
 import io.reactivex.lab.edge.clients.SocialCommand;
 import io.reactivex.lab.edge.clients.UserCommand;
 import io.reactivex.lab.edge.clients.VideoMetadataCommand;
-import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
-import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
-import io.reactivex.lab.edge.clients.RatingsCommand.Rating;
 import io.reactivex.lab.edge.clients.VideoMetadataCommand.VideoMetadata;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
@@ -35,7 +35,7 @@ public class RouteForDeviceHome {
         return INSTANCE;
     }
 
-    public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ServerSentEvent> response) {
+    public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
         List<String> userId = request.getQueryParameters().get("userId");
         if (userId == null || userId.size() != 1) {
             return EdgeServer.writeError(request, response, "A single 'userId' is required.");
@@ -45,7 +45,7 @@ public class RouteForDeviceHome {
             Observable<Map<String, Object>> catalog = new PersonalizedCatalogCommand(user).observe()
                     .flatMap(catalogList -> {
                         return catalogList.videos().<Map<String, Object>> flatMap(video -> {
-                            Observable<Bookmark> bookmark = new BookmarksCommand(video).observe();
+                            Observable<Bookmark> bookmark = new BookmarkCommand(video).observe();
                             Observable<Rating> rating = new RatingsCommand(video).observe();
                             Observable<VideoMetadata> metadata = new VideoMetadataCommand(video).observe();
                             return Observable.zip(bookmark, rating, metadata, (b, r, m) -> {
@@ -60,7 +60,7 @@ public class RouteForDeviceHome {
 
             return Observable.merge(catalog, social);
         }).flatMap(data -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(data)));
+            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(data)), EdgeServer.SSE_TRANSFORMER);
         });
     }
 

@@ -3,7 +3,6 @@ package io.reactivex.lab.edge.clients;
 import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.edge.common.RxNettySSE;
-import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 
 import java.util.ArrayList;
@@ -16,12 +15,12 @@ import rx.Observable;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
 
-public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
+public class BookmarksListCommand extends HystrixObservableCommand<List<Bookmark>> {
 
     final List<Video> videos;
     final String cacheKey;
 
-    public BookmarksCommand(List<Video> videos) {
+    public BookmarksListCommand(List<Video> videos) {
         super(HystrixCommandGroupKey.Factory.asKey("GetBookmarks"));
         this.videos = videos;
         StringBuffer b = new StringBuffer();
@@ -32,7 +31,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
     }
 
     @Override
-    protected Observable<Bookmark> run() {
+    protected Observable<List<Bookmark>> run() {
         return RxNettySSE.createHttpClient("localhost", 9190)
                 .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
@@ -40,10 +39,10 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
                         return Bookmark.fromJson(sse.getEventData());
                     });
                     return bytesToJson;
-                });
+                }).toList();
     }
 
-    protected Observable<Bookmark> getFallback() {
+    protected Observable<List<Bookmark>> getFallback() {
         List<Bookmark> bs = new ArrayList<>();
         for (Video v : videos) {
             Map<String, Object> data = new HashMap<String, Object>();
@@ -51,33 +50,11 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
             data.put("videoId", v.getId());
             bs.add(new Bookmark(data));
         }
-        return Observable.from(bs);
+        return Observable.from(bs).toList();
     }
 
     @Override
     protected String getCacheKey() {
         return cacheKey;
-    }
-
-    public static class Bookmark {
-
-        private final Map<String, Object> data;
-
-        Bookmark(Map<String, Object> data) {
-            this.data = data;
-        }
-
-        public static Bookmark fromJson(String json) {
-            return new Bookmark(SimpleJson.jsonToMap(json));
-        }
-
-        public int getPosition() {
-            return (int) data.get("position");
-        }
-
-        public int getVideoId() {
-            return Integer.parseInt(String.valueOf(data.get("videoId")));
-        }
-
     }
 }

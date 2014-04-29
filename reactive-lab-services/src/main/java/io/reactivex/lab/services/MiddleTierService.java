@@ -17,7 +17,7 @@ public abstract class MiddleTierService {
     public HttpServer<ByteBuf, ServerSentEvent> createServer(int port) {
         System.out.println("Start " + getClass().getSimpleName() + " on port: " + port);
         return RxNettySSE.createHttpServer(port, (request, response) -> {
-            System.out.println("Server => Request: " + request.getPath());
+            // System.out.println("Server => Request: " + request.getPath());
             try {
                 return handleRequest(request, response);
             } catch (Throwable e) {

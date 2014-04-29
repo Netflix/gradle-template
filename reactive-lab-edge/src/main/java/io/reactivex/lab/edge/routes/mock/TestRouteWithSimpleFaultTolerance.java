@@ -25,15 +25,9 @@ import rx.Observable;
  * D) GET http://hostname:9999/mock.json?numItems=1&itemSize=1000&delay=1&id={a.responseKey}
  * E) GET http://hostname:9999/mock.json?numItems=100&itemSize=30&delay=4&id={b.responseKey}
  */
-public class TestEndpointWithSimpleFaultTolerance {
+public class TestRouteWithSimpleFaultTolerance {
 
-    final static TestEndpointWithSimpleFaultTolerance INSTANCE = new TestEndpointWithSimpleFaultTolerance();
-
-    public static TestEndpointWithSimpleFaultTolerance getInstance() {
-        return INSTANCE;
-    }
-
-    public static Observable<Void> testEndpoint(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
+    public static Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
         List<String> _id = request.getQueryParameters().get("id");
         if (_id == null || _id.size() != 1) {
             return writeError(request, response, "Please provide a numerical 'id' value. It can be a random number (uuid).");
