@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func0;
+import rx.operators.OperatorDefer;
 import rx.subscriptions.Subscriptions;
 
 import com.netflix.hystrix.HystrixRequestLog;
@@ -40,8 +42,8 @@ public class EdgeServer {
 
         // start web services => http://localhost:8080
         RxNetty.createHttpServer(8080, (request, response) -> {
-            return Observable.defer(() -> {
-                System.out.println("Server => Request: " + request.getPath());
+            System.out.println("Server => Request: " + request.getPath());
+            return defer(() -> {
                 HystrixRequestContext.initializeContext();
                 try {
                     return handleRoutes(request, response);
@@ -143,5 +145,12 @@ public class EdgeServer {
             String data = eventBuilder.toString();
             return byteBufAllocator.buffer(data.length()).writeBytes(data.getBytes());
         }
+    }
+
+    /*
+     * Workaround for Java 8 issue: https://github.com/Netflix/RxJava/issues/1157
+     */
+    public final static <T> Observable<T> defer(Func0<Observable<T>> observableFactory) {
+        return Observable.create(new OperatorDefer<T>(observableFactory));
     }
 }

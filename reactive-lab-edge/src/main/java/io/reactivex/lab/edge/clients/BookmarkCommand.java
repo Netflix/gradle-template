@@ -3,17 +3,14 @@ package io.reactivex.lab.edge.clients;
 import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import rx.functions.Func1;
 
 import com.netflix.hystrix.HystrixCollapser.CollapsedRequest;
-import com.netflix.hystrix.HystrixObservableCollapser;
-import com.netflix.hystrix.HystrixObservableCommand;
+import com.netflix.hystrix.*;
 
-public class BookmarkCommand extends HystrixObservableCollapser<List<Bookmark>, Bookmark, Video> {
+public class BookmarkCommand extends HystrixObservableCollapser<Integer, Bookmark, Bookmark, Video> {
 
     private final Video video;
 
@@ -27,28 +24,32 @@ public class BookmarkCommand extends HystrixObservableCollapser<List<Bookmark>, 
     }
 
     @Override
-    protected HystrixObservableCommand<List<Bookmark>> createCommand(Collection<CollapsedRequest<Bookmark, Video>> requests) {
+    protected HystrixObservableCommand<Bookmark> createCommand(Collection<CollapsedRequest<Bookmark, Video>> requests) {
         List<Video> videos = new ArrayList<>();
         for (CollapsedRequest<Bookmark, Video> r : requests) {
             videos.add(r.getArgument());
         }
-        return new BookmarksListCommand(videos);
+        return new BookmarksCommand(videos);
+    }
+
+    protected void onMissingResponse(CollapsedRequest<Bookmark, Video> r) {
+        // set a default using setResponse or an exception like this
+        r.setException(new Exception("No bookmark"));
     }
 
     @Override
-    protected void mapResponseToRequests(List<Bookmark> batchResponse, Collection<CollapsedRequest<Bookmark, Video>> requests) {
-        Map<Integer, Bookmark> bs = new HashMap<>();
-        for (Bookmark b : batchResponse) {
-            bs.put(b.getVideoId(), b);
-        }
-        for (CollapsedRequest<Bookmark, Video> r : requests) {
-            Bookmark b = bs.get(r.getArgument().getId());
-            if (b == null) {
-                // would normally send a default instead of failing here
-                r.setException(new Exception("No bookmark"));
-            } else {
-                r.setResponse(b);
-            }
-        }
+    protected Func1<Bookmark, Integer> getBatchReturnTypeKeySelector() {
+        return (Bookmark b) -> b.getVideoId();
     }
+
+    @Override
+    protected Func1<Video, Integer> getRequestArgumentKeySelector() {
+        return (Video v) -> v.getId();
+    }
+
+    @Override
+    protected Func1<Bookmark, Bookmark> getBatchReturnTypeToResponseTypeMapper() {
+        return (b) -> b;
+    }
+
 }
