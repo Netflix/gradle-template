@@ -54,3 +54,72 @@ Here is a batch request using SSE inside a `HystrixObservableCommand` for fault-
 
 A `HystrixObservableCollapser` can be put in front of that command to allow automated batching: [BookmarkCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients/BookmarkCommand.java).
 
+
+### Composition
+
+Nested, parallel execution of network requests can be composed using RxJava and Hystrix as demonstrated in [RouteForDeviceHome](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/routes/RouteForDeviceHome.java#L44) which is the example running at the `/device/home` endpoint.
+
+Here is a portion of the code to show the composition:
+
+```java
+        return new UserCommand(userId).observe().flatMap(user -> {
+            Observable<Map<String, Object>> catalog = new PersonalizedCatalogCommand(user).observe()
+                    .flatMap(catalogList -> {
+                        return catalogList.videos().<Map<String, Object>> flatMap(video -> {
+                            Observable<Bookmark> bookmark = new BookmarkCommand(video).observe();
+                            Observable<Rating> rating = new RatingsCommand(video).observe();
+                            Observable<VideoMetadata> metadata = new VideoMetadataCommand(video).observe();
+                            return Observable.zip(bookmark, rating, metadata, (b, r, m) -> {
+                                return combineVideoData(video, b, r, m);
+                            });
+                        });
+                    });
+
+            Observable<Map<String, Object>> social = new SocialCommand(user).observe().map(s -> {
+                return s.getDataAsMap();
+            });
+
+            return Observable.merge(catalog, social);
+        }).flatMap(data -> {
+            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(data)), EdgeServer.SSE_TRANSFORMER);
+        });
+```
+
+This results in 7 network calls being made, and multiple bookmark requests are automatically collapsed into 1 network call. Here is the `HystrixRequestLog` that results from the code above being executed:
+
+
+```
+Server => Hystrix Log [/device/home] => UserCommand[SUCCESS][191ms], PersonalizedCatalogCommand[SUCCESS][50ms], SocialCommand[SUCCESS][53ms], RatingsCommand[SUCCESS][65ms]x6, VideoMetadataCommand[SUCCESS][73ms]x6, BookmarksCommand[SUCCESS, COLLAPSED][25ms], BookmarksCommand[SUCCESS, COLLAPSED][24ms]
+```
+
+### Javascript
+
+The [EdgeServer](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/EdgeServer.java) also supports routing to endpoints implemented with [Javascript](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/JavascriptRuntime.java).
+
+
+Various simple endpoints can be seen in the [/jsx/endpoints](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-edge/src/main/resources/jsx/endpoints) resource folder.
+
+An endpoint in Javascript implements an `execute` function such as these:
+
+```javascript
+function execute() {
+	return "Hello World!"
+}
+```
+
+```javascript
+function execute(parameters) {
+	return api.getData().map(function(s) {
+		return "transformed-data-" + s;
+	})
+}
+```
+
+```javascript
+function execute(parameters) {
+	/*
+	 * "api" is a reference to APIServiceLayer for invoking Java code
+	 */
+	return api.hello(parameters.name[0]); // uses "name" query parameter
+}
+```
