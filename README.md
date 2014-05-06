@@ -41,36 +41,16 @@ Basics are:
 
 Clients using Netty and RxJava can be seen in the [clients](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients) package. 
 
-Basic example with request/response:
+Basic example:
 
 ```java
         return RxNetty.createHttpClient("localhost", 9100)
-                .submit(HttpClientRequest.createGet("/mock.json?numItems=" + numItems + "&itemSize=" + itemSize + "&delay=" + delay + "&id=" + id));
+                .submit(HttpClientRequest.createGet("/mock.json?id=" + id));
 ```
 
-and then expanding on that to convert the response into a different format:
+### Hystrix
 
-```java
-        return RxNetty.createHttpClient("localhost", 9100)
-                .submit(HttpClientRequest.createGet("/mock.json?numItems=" + numItems + "&itemSize=" + itemSize + "&delay=" + delay + "&id=" + id))
-                .flatMap((HttpClientResponse<ByteBuf> r) -> {
-                    Observable<BackendResponse> bytesToJson = r.getContent().map(b -> {
-                        return BackendResponse.fromJson(new ByteBufInputStream(b));
-                    });
-                    return bytesToJson;
-                });
-```
+Here is a batch request using SSE inside a `HystrixObservableCommand` for fault-tolerance: [BookmarksCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients/BookmarksCommand.java).
 
+A `HystrixObservableCollapser` can be put in front of that command to allow automated batching: [BookmarkCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients/BookmarkCommand.java).
 
-Another example but this time with server-sent-events (SSE):
-
-```java
-        return RxNettySSE.createHttpClient("localhost", 9190)
-                .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> {
-                    Observable<Bookmark> bytesToJson = r.getContent().map(sse -> {
-                        return Bookmark.fromJson(sse.getEventData());
-                    });
-                    return bytesToJson;
-                });
-```
