@@ -91,35 +91,3 @@ This results in 7 network calls being made, and multiple bookmark requests are a
 ```
 Server => Hystrix Log [/device/home] => UserCommand[SUCCESS][191ms], PersonalizedCatalogCommand[SUCCESS][50ms], SocialCommand[SUCCESS][53ms], RatingsCommand[SUCCESS][65ms]x6, VideoMetadataCommand[SUCCESS][73ms]x6, BookmarksCommand[SUCCESS, COLLAPSED][25ms], BookmarksCommand[SUCCESS, COLLAPSED][24ms]
 ```
-
-### Javascript
-
-The [EdgeServer](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/EdgeServer.java) also supports routing to endpoints implemented with [Javascript](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/JavascriptRuntime.java).
-
-
-Various simple endpoints can be seen in the [/jsx/endpoints](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-edge/src/main/resources/jsx/endpoints) resource folder.
-
-An endpoint in Javascript implements an `execute` function such as these:
-
-```javascript
-function execute() {
-	return "Hello World!"
-}
-```
-
-```javascript
-function execute(parameters) {
-	return api.getData().map(function(s) {
-		return "transformed-data-" + s;
-	})
-}
-```
-
-```javascript
-function execute(parameters) {
-	/*
-	 * "api" is a reference to APIServiceLayer for invoking Java code
-	 */
-	return api.hello(parameters.name[0]); // uses "name" query parameter
-}
-```
