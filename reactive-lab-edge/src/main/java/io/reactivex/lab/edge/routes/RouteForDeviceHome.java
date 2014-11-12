@@ -15,7 +15,6 @@ import io.reactivex.lab.edge.clients.VideoMetadataCommand.VideoMetadata;
 import io.reactivex.lab.edge.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,7 +59,7 @@ public class RouteForDeviceHome {
 
             return Observable.merge(catalog, social);
         }).flatMap(data -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(data)), EdgeServer.SSE_TRANSFORMER);
+            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data));
         });
     }
 

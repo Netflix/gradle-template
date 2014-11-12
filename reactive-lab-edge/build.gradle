@@ -2,10 +2,14 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-	compile 'com.netflix.rxnetty:rx-netty:0.3.3'
-	compile 'com.netflix.rxjava:rxjava-core:0.18.2'
-	compile 'com.netflix.hystrix:hystrix-core:1.4.0-RC4'
-	compile 'com.netflix.hystrix:hystrix-metrics-event-stream:1.4.0-RC4'
+	compile 'com.netflix.rxnetty:rx-netty:0.3.18'
+	compile 'io.reactivex:rxjava:1.0.0-rc.10'
+	compile('com.netflix.hystrix:hystrix-core:1.4.0-RC5') {
+        exclude group: 'com.netflix.rxjava', module: 'rxjava-core' 
+    }
+	compile('com.netflix.hystrix:hystrix-metrics-event-stream:1.4.0-RC5') {
+        exclude group: 'com.netflix.rxjava', module: 'rxjava-core'  
+    }
 	compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
 	compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     testCompile 'junit:junit-dep:4.10'
