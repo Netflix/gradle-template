@@ -27,7 +27,8 @@ public class GeoService extends MiddleTierService {
                 ip_data.put("latitude", "51.5");
                 data.put(ip, ip_data);
             }
-            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data) + "\n");
+            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data) + "\n")
+                           .doOnCompleted(response::close);
         }).delay(10, TimeUnit.MILLISECONDS);
     }
 }

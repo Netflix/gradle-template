@@ -27,8 +27,8 @@ public class UserService extends MiddleTierService {
             user.put("name", "Name Here");
             user.put("other_data", "goes_here");
             return user;
-        }).flatMap(user -> {
-            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(user) + "\n");
-        }).delay(((long) (Math.random() * 20) + 1500), TimeUnit.MILLISECONDS); // simulate latency 
+        }).flatMap(user -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(user) + "\n")
+                                   .doOnCompleted(response::close))
+                         .delay(((long) (Math.random() * 20) + 1500), TimeUnit.MILLISECONDS); // simulate latency
     }
 }
