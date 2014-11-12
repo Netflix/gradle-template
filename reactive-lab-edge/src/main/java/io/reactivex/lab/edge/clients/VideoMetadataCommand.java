@@ -35,7 +35,7 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
                 .submit(HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<VideoMetadata> bytesToJson = r.getContent().map(sse -> {
-                        return VideoMetadata.fromJson(sse.getEventData());
+                        return VideoMetadata.fromJson(sse.contentAsString());
                     });
                     return bytesToJson;
                 });

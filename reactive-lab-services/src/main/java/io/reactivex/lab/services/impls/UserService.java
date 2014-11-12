@@ -4,7 +4,7 @@ import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +28,7 @@ public class UserService extends MiddleTierService {
             user.put("other_data", "goes_here");
             return user;
         }).flatMap(user -> {
-            return response.writeAndFlush(new ServerSentEvent("1", "data", SimpleJson.mapToJson(user)));
+            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(user) + "\n");
         }).delay(((long) (Math.random() * 20) + 1500), TimeUnit.MILLISECONDS); // simulate latency 
     }
 }

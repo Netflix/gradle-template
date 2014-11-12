@@ -28,7 +28,7 @@ public class GeoCommand extends HystrixObservableCommand<GeoIP> {
                 .submit(HttpClientRequest.createGet("/geo?" + UrlGenerator.generate("ip", ips)))
                 .flatMap(r -> {
                     Observable<GeoIP> bytesToJson = r.getContent().map(sse -> {
-                        return GeoIP.fromJson(sse.getEventData());
+                        return GeoIP.fromJson(sse.contentAsString());
                     });
                     return bytesToJson;
                 });

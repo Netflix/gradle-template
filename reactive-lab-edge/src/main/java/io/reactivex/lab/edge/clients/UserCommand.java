@@ -28,7 +28,7 @@ public class UserCommand extends HystrixObservableCommand<User> {
                 .submit(HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds)))
                 .flatMap(r -> {
                     Observable<User> user = r.getContent().map(sse -> {
-                        return User.fromJson(sse.getEventData());
+                        return User.fromJson(sse.contentAsString());
                     });
                     return user;
                 });

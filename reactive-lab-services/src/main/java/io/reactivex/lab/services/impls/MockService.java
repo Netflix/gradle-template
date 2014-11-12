@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class MockService extends MiddleTierService {
         }
 
         response.setStatus(HttpResponseStatus.OK);
-        return MockResponse.generateJson(id, delay, itemSize, numItems).flatMap(json -> response.writeStringAndFlush(json));
+        return MockResponse.generateJson(id, delay, itemSize, numItems).flatMap(response::writeStringAndFlush);
     }
 
 }

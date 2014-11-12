@@ -35,7 +35,7 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
                 .submit(HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users)))
                 .flatMap(r -> {
                     Observable<Catalog> bytesToJson = r.getContent().map(sse -> {
-                        return Catalog.fromJson(sse.getEventData());
+                        return Catalog.fromJson(sse.contentAsString());
                     });
                     return bytesToJson;
                 });

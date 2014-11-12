@@ -34,7 +34,7 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
                 .submit(HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<Rating> bytesToJson = r.getContent().map(sse -> {
-                        return Rating.fromJson(sse.getEventData());
+                        return Rating.fromJson(sse.contentAsString());
                     });
                     return bytesToJson;
                 });

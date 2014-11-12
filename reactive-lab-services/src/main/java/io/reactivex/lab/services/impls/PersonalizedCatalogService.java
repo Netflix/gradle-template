@@ -4,7 +4,7 @@ import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,8 +25,7 @@ public class PersonalizedCatalogService extends MiddleTierService {
             userData.put("other_data", "goes_here");
             userData.put("videos", Arrays.asList(12345, 23456, 34567, 45678, 56789, 67890));
             return userData;
-        }).flatMap(list -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(list)));
-        }).delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS); // simulate latency 
+        }).flatMap(list -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(list) + "\n"))
+                         .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS); // simulate latency
     }
 }

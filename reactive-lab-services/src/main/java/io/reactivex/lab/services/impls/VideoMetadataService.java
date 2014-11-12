@@ -4,7 +4,7 @@ import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ public class VideoMetadataService extends MiddleTierService {
             video.put("other_data", "goes_here");
             return video;
         }).flatMap(video -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(video)));
+            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(video) + "\n");
         }).delay(((long) (Math.random() * 20) + 20), TimeUnit.MILLISECONDS); // simulate latency 
     }
 }
