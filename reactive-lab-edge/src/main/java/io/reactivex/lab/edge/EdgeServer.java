@@ -1,7 +1,6 @@
 package io.reactivex.lab.edge;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.lab.edge.routes.RouteForDeviceHome;
 import io.reactivex.lab.edge.routes.mock.TestRouteBasic;
@@ -11,15 +10,11 @@ import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
-import io.reactivex.netty.serialization.ContentTransformer;
 
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Func0;
-import rx.operators.OperatorDefer;
 import rx.subscriptions.Subscriptions;
 
 import com.netflix.hystrix.HystrixRequestLog;
@@ -43,7 +38,7 @@ public class EdgeServer {
         // start web services => http://localhost:8080
         RxNetty.createHttpServer(8080, (request, response) -> {
             System.out.println("Server => Request: " + request.getPath());
-            return defer(() -> {
+            return Observable.defer(() -> {
                 HystrixRequestContext.initializeContext();
                 try {
                     return handleRoutes(request, response);
@@ -79,9 +74,6 @@ public class EdgeServer {
             return TestRouteWithSimpleFaultTolerance.handle(request, response);
         } else if (request.getPath().equals("/testWithHystrix")) {
             return TestRouteWithHystrix.handle(request, response);
-        } else if (request.getPath().endsWith(".js")) {
-            System.out.println("Server => Javascript Request: " + request.getPath());
-            return JavascriptRuntime.getInstance().handleRequest(request, response);
         } else {
             return writeError(request, response, "Unknown path: " + request.getPath());
         }
@@ -93,13 +85,13 @@ public class EdgeServer {
             response.getHeaders().add("content-type", "text/event-stream");
             return Observable.create((Subscriber<? super Void> s) -> {
                 s.add(streamPoller.subscribe(json -> {
-                    response.writeAndFlush(new ServerSentEvent("", "data", json));
+                    response.writeStringAndFlush("data: " + json);
                 }, error -> {
                     s.onError(error);
                 }));
 
                 s.add(Observable.interval(1000, TimeUnit.MILLISECONDS).flatMap(n -> {
-                    return response.writeAndFlush(new ServerSentEvent("", "ping", ""))
+                    return response.writeStringAndFlush("ping:")
                             .onErrorReturn(e -> {
                                 System.out.println("Connection closed, unsubscribing from Hystrix Stream");
                                 s.unsubscribe();
@@ -132,25 +124,4 @@ public class EdgeServer {
         return response.writeStringAndFlush("Error 500: " + message);
     }
 
-    public static SSETransformer SSE_TRANSFORMER = new SSETransformer();
-
-    private static class SSETransformer implements ContentTransformer<ServerSentEvent> {
-        @Override
-        public ByteBuf transform(ServerSentEvent toTransform, ByteBufAllocator byteBufAllocator) {
-            StringBuilder eventBuilder = new StringBuilder();
-            eventBuilder.append(toTransform.getEventName());
-            eventBuilder.append(": ");
-            eventBuilder.append(toTransform.getEventData());
-            eventBuilder.append("\n\n");
-            String data = eventBuilder.toString();
-            return byteBufAllocator.buffer(data.length()).writeBytes(data.getBytes());
-        }
-    }
-
-    /*
-     * Workaround for Java 8 issue: https://github.com/Netflix/RxJava/issues/1157
-     */
-    public final static <T> Observable<T> defer(Func0<Observable<T>> observableFactory) {
-        return Observable.create(new OperatorDefer<T>(observableFactory));
-    }
 }

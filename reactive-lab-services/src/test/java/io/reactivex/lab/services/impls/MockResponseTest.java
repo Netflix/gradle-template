@@ -12,7 +12,7 @@ public class MockResponseTest {
     @Test
     public void testJson() throws Exception {
         Observable<String> jsonObservable = MockResponse.generateJson(736L, 1, 1000, 5);
-        String json = jsonObservable.toBlockingObservable().single();
+        String json = jsonObservable.toBlocking().single();
         System.out.println(json);
         assertTrue(json.startsWith("{\"responseKey\":" + MockResponse.getResponseKey(736L) + ",\"delay\":1,\"itemSize\":1000,\"numItems\":5,\"items\""));
         System.out.println("json: " + json);

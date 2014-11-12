@@ -10,7 +10,7 @@ import rx.Observable;
 public class APIServiceLayer {
 
     public Observable<String> getData() {
-        return Observable.from("one", "two", "three");
+        return Observable.just("one", "two", "three");
     }
 
     public String hello(String name) {
