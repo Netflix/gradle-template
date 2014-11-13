@@ -4,7 +4,7 @@ import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,9 +22,8 @@ public class SocialService extends MiddleTierService {
             user.put("userId", userId);
             user.put("friends", Arrays.asList(randomUser(), randomUser(), randomUser(), randomUser()));
             return user;
-        }).flatMap(list -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(list)));
-        }).delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS); // simulate latency 
+        }).flatMap(list -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(list) + "\n"))
+                         .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
     }
 
     private static int randomUser() {

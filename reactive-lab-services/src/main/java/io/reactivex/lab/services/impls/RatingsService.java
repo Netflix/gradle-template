@@ -4,7 +4,7 @@ import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +25,7 @@ public class RatingsService extends MiddleTierService {
             video.put("actual_user_rating", 4);
             video.put("average_user_rating", 3.1);
             return video;
-        }).flatMap(video -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(video)));
-        }).delay(20, TimeUnit.MILLISECONDS); // simulate latenc
+        }).flatMap(video -> response.writeStringAndFlush("data : " + SimpleJson.mapToJson(video) + "\n"))
+                         .delay(20, TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latenc
     }
 }

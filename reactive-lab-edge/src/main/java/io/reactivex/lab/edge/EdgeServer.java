@@ -99,7 +99,7 @@ public class EdgeServer {
                             });
                 }).subscribe());
             });
-        }, PipelineConfigurators.<ByteBuf> sseServerConfigurator()).start();
+        }, PipelineConfigurators.<ByteBuf> serveSseConfigurator()).start();
     }
 
     final static Observable<String> streamPoller = Observable.create((Subscriber<? super String> s) -> {

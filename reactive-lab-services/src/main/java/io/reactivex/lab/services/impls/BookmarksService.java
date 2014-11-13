@@ -5,7 +5,7 @@ import io.reactivex.lab.services.common.Random;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.text.sse.ServerSentEvent;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +30,7 @@ public class BookmarksService extends MiddleTierService {
             video.put("videoId", videoId);
             video.put("position", (int) (Math.random() * 5000));
             return video;
-        }).flatMap(video -> {
-            return response.writeAndFlush(new ServerSentEvent("", "data", SimpleJson.mapToJson(video)));
-        }).delay(latency, TimeUnit.MILLISECONDS); // simulate latency
+        }).flatMap(video -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(video) + "\n"))
+                         .delay(latency, TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
     }
 }

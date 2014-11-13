@@ -37,7 +37,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
                 .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
                 .flatMap(r -> {
                     Observable<Bookmark> bytesToJson = r.getContent().map(sse -> {
-                        return Bookmark.fromJson(sse.getEventData());
+                        return Bookmark.fromJson(sse.contentAsString());
                     });
                     return bytesToJson;
                 });
