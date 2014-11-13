@@ -6,8 +6,6 @@ import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.common.SimpleJson;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 import netflix.ocelli.LoadBalancer;
@@ -38,30 +36,13 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
     @Override
     public Observable<Bookmark> run() {
-/*
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet( "/bookmarks?"
                                                                           + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
-                           .map(holder -> {
-                               return holder.getClient();
-                           })
-                           .flatMap(client -> {
-                               return client.submit(request)
-                                            .flatMap(r -> {
-                                                return r.getContent().map(sse -> {
-                                                    return Bookmark.fromJson(sse.contentAsString());
-                                                });
-                                            });
-                           });
-*/
-        return RxNetty.createHttpClient("localhost", 9190, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
-                      .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
-                      .flatMap(r -> r.getContent().map(sse -> {
-                          String json = sse.contentAsString();
-                          System.out.println("Returning bookmark: " + json);
-                          return Bookmark.fromJson(json);
-                      }));
-
+                           .map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                        .flatMap(r -> r.getContent().map(sse -> Bookmark.fromJson(
+                                                sse.contentAsString()))));
     }
 
     protected Observable<Bookmark> getFallback() {

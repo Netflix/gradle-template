@@ -1,17 +1,10 @@
 package io.reactivex.lab.gateway.routes;
 
-import com.netflix.eureka2.client.Eureka;
-import com.netflix.eureka2.client.EurekaClient;
-import com.netflix.eureka2.client.resolver.ServerResolver;
-import com.netflix.eureka2.client.resolver.ServerResolvers;
-import com.netflix.eureka2.interests.Interests;
-import com.netflix.eureka2.transport.EurekaTransports;
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.logging.LogLevel;
 import io.reactivex.lab.gateway.StartGatewayServer;
 import io.reactivex.lab.gateway.clients.BookmarkCommand;
 import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
-import io.reactivex.lab.gateway.clients.MiddleTierLoadBalancer;
+import io.reactivex.lab.gateway.clients.LoadBalancerFactory;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.RatingsCommand;
@@ -21,56 +14,33 @@ import io.reactivex.lab.gateway.clients.UserCommand;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand.VideoMetadata;
 import io.reactivex.lab.gateway.common.SimpleJson;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.protocol.http.client.HttpClient;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-import netflix.ocelli.Host;
 import netflix.ocelli.LoadBalancer;
-import netflix.ocelli.eureka.EurekaMembershipSource;
 import netflix.ocelli.rxnetty.HttpClientHolder;
-import netflix.ocelli.rxnetty.HttpClientPool;
 import rx.Observable;
-import rx.functions.Func1;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
-
 public class RouteForDeviceHome {
 
-    private static final RouteForDeviceHome INSTANCE = new RouteForDeviceHome();
     private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> bookmarksLb;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> userLb;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> personalizationLb;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> ratingsLb;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> videoMetadataLb;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> socialLb;
 
-    private RouteForDeviceHome() {
-        ServerResolver.Server discoveryServer = new ServerResolver.Server("127.0.0.1", 7001);
-        ServerResolver.Server registrationServer = new ServerResolver.Server("127.0.0.1", 7001);
-        EurekaClient client = Eureka.newClientBuilder(ServerResolvers.from(discoveryServer),
-                                                      ServerResolvers.from(registrationServer))
-                                    .withCodec(EurekaTransports.Codec.Json)
-                                    .build();
-
-        client.forInterest(Interests.forFullRegistry()).take(1).toBlocking().single();
-
-        EurekaMembershipSource membershipSource = new EurekaMembershipSource(client);
-        MiddleTierLoadBalancer loadBalancer = new MiddleTierLoadBalancer(membershipSource,
-                                                  new HttpClientPool<ByteBuf, ServerSentEvent>(new Func1<Host, HttpClient<ByteBuf, ServerSentEvent>>() {
-                                                      @Override
-                                                      public HttpClient<ByteBuf, ServerSentEvent> call(Host host) {
-                                                          return RxNetty.<ByteBuf, ServerSentEvent>newHttpClientBuilder(host.getHostName(), host.getPort())
-                                                                        .pipelineConfigurator(clientSseConfigurator())
-                                                                        .enableWireLogging(LogLevel.ERROR)
-                                                                        .build();
-                                                      }
-                                                  }));
-        bookmarksLb = loadBalancer.forVip("reactive-lab-bookmark-service");
-    }
-
-    public static RouteForDeviceHome getInstance() {
-        return INSTANCE;
+    public RouteForDeviceHome(LoadBalancerFactory loadBalancerFactory) {
+        bookmarksLb = loadBalancerFactory.forVip("reactive-lab-bookmark-service");
+        userLb = loadBalancerFactory.forVip("reactive-lab-user-service");
+        personalizationLb = loadBalancerFactory.forVip("reactive-lab-personalized-catalog-service");
+        ratingsLb = loadBalancerFactory.forVip("reactive-lab-ratings-service");
+        videoMetadataLb = loadBalancerFactory.forVip("reactive-lab-vms-service");
+        socialLb = loadBalancerFactory.forVip("reactive-lab-social-service");
     }
 
     public Observable<Void> handle(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
@@ -79,20 +49,77 @@ public class RouteForDeviceHome {
             return StartGatewayServer.writeError(request, response, "A single 'userId' is required.");
         }
 
-        return new UserCommand(userId).observe().flatMap(user -> {
-            Observable<Map<String, Object>> catalog = new PersonalizedCatalogCommand(user).observe()
-                    .flatMap(catalogList -> catalogList.videos().<Map<String, Object>> flatMap(video -> {
-                        Observable<Bookmark> bookmark = new BookmarkCommand(video, bookmarksLb).observe();
-                        Observable<Rating> rating = new RatingsCommand(video).observe();
-                        Observable<VideoMetadata> metadata = new VideoMetadataCommand(video).observe();
-                        return Observable.zip(bookmark, rating, metadata, (b, r, m) -> combineVideoData(video, b, r, m));
-                    }));
+        return new UserCommand(userId, userLb).observe().flatMap(user -> {
+            Observable<Map<String, Object>> catalog = new PersonalizedCatalogCommand(user, personalizationLb).observe()
+                                                                                                             .flatMap(
+                                                                                                                     catalogList -> catalogList
+                                                                                                                             .videos()
+                                                                                                                             .<Map<String, Object>>flatMap(
+                                                                                                                                     video -> {
+                                                                                                                                         Observable<Bookmark>
+                                                                                                                                                 bookmark =
+                                                                                                                                                 new BookmarkCommand(
+                                                                                                                                                         video,
+                                                                                                                                                         bookmarksLb)
+                                                                                                                                                         .observe()
+                                                                                                                                                         .doOnEach(
+                                                                                                                                                                 not -> System.out
+                                                                                                                                                                         .println(
+                                                                                                                                                                                 "bookmark=>"
+                                                                                                                                                                                 + not.getKind()));
+                                                                                                                                         Observable<Rating>
+                                                                                                                                                 rating =
+                                                                                                                                                 new RatingsCommand(
+                                                                                                                                                         video,
+                                                                                                                                                         ratingsLb)
+                                                                                                                                                         .observe()
+                                                                                                                                                         .doOnEach(
+                                                                                                                                                                 not -> System.out
+                                                                                                                                                                         .println(
+                                                                                                                                                                                 "rating=>"
+                                                                                                                                                                                 + not.getKind()));
+                                                                                                                                         Observable<VideoMetadata>
+                                                                                                                                                 metadata =
+                                                                                                                                                 new VideoMetadataCommand(
+                                                                                                                                                         video,
+                                                                                                                                                         videoMetadataLb)
+                                                                                                                                                         .observe()
+                                                                                                                                                         .doOnEach(
+                                                                                                                                                                 not -> System.out
+                                                                                                                                                                         .println(
+                                                                                                                                                                                 "video=>"
+                                                                                                                                                                                 + not.getKind()));
+                                                                                                                                         ;
+                                                                                                                                         return Observable
+                                                                                                                                                 .zip(bookmark,
+                                                                                                                                                      rating,
+                                                                                                                                                      metadata,
+                                                                                                                                                      (b,
+                                                                                                                                                       r,
+                                                                                                                                                       m) -> combineVideoData(
+                                                                                                                                                              video,
+                                                                                                                                                              b,
+                                                                                                                                                              r,
+                                                                                                                                                              m))
+                                                                                                                                                 .doOnNext(
+                                                                                                                                                         stringObjectMap -> {
+                                                                                                                                                             System.out
+                                                                                                                                                                     .println(
+                                                                                                                                                                             "stringObjectMap = "
+                                                                                                                                                                             + stringObjectMap);
+                                                                                                                                                         });
+                                                                                                                                     }));
 
-            Observable<Map<String, Object>> social = new SocialCommand(user).observe()
-                                                                            .map(SocialCommand.Social::getDataAsMap);
+            Observable<Map<String, Object>> social = new SocialCommand(user, socialLb).observe()
+                                                                                      .map(SocialCommand.Social::getDataAsMap)
+                                                                                      .doOnNext(System.out::println);
 
             return Observable.merge(catalog, social);
-        }).flatMap(data -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data)));
+        }).flatMap(data -> {
+            String json = SimpleJson.mapToJson(data);
+            System.out.println("json = " + json);
+            return response.writeStringAndFlush("data: " + json);
+        });
     }
 
     private Map<String, Object> combineVideoData(Video video, Bookmark b, Rating r, VideoMetadata m) {

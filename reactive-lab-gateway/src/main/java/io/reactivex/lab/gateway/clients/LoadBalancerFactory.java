@@ -21,13 +21,13 @@ import rx.Observable;
  *
  * @author Nitesh Kant
  */
-public class MiddleTierLoadBalancer {
+public class LoadBalancerFactory {
 
     private final EurekaMembershipSource membershipSource;
     private final HttpClientPool<ByteBuf, ServerSentEvent> clientPool;
 
-    public MiddleTierLoadBalancer(EurekaMembershipSource membershipSource,
-                                  HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
+    public LoadBalancerFactory(EurekaMembershipSource membershipSource,
+                               HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
         this.membershipSource = membershipSource;
         this.clientPool = clientPool;
     }
