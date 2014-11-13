@@ -1,19 +1,23 @@
 package io.reactivex.lab.services.impls;
 
+import com.netflix.eureka2.client.EurekaClient;
 import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
-
 public class PersonalizedCatalogService extends MiddleTierService {
+
+    public PersonalizedCatalogService(EurekaClient client) {
+        super("reactive-lab-personalized-catalog-service", client);
+    }
 
     @Override
     protected Observable<Void> handleRequest(HttpServerRequest<?> request, HttpServerResponse<ServerSentEvent> response) {

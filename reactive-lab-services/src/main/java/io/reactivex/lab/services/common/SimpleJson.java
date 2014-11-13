@@ -1,12 +1,12 @@
 package io.reactivex.lab.services.common;
 
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectReader;
 import org.codehaus.jackson.map.ObjectWriter;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class SimpleJson {
 
@@ -20,7 +20,7 @@ public class SimpleJson {
         return INSTANCE._jsonToMap(jsonString);
     }
 
-    public static String mapToJson(Map<String, ? extends Object> map) {
+    public static String mapToJson(Map<String, ?> map) {
         return INSTANCE._mapToJson(map);
     }
 
@@ -37,7 +37,7 @@ public class SimpleJson {
 
     private final ObjectWriter objectWriter = objectMapper.writerWithType(Map.class);
 
-    private String _mapToJson(Map<String, ? extends Object> map) {
+    private String _mapToJson(Map<String, ?> map) {
         try {
             return objectWriter.writeValueAsString(map);
         } catch (IOException e) {

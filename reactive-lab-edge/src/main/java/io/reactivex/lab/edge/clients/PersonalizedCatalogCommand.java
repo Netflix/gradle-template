@@ -1,19 +1,19 @@
 package io.reactivex.lab.edge.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Catalog;
 import io.reactivex.lab.edge.clients.UserCommand.User;
-import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
+import io.reactivex.netty.RxNetty;
+import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 
 public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog> {
 
@@ -31,14 +31,9 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
 
     @Override
     protected Observable<Catalog> run() {
-        return RxNettySSE.createHttpClient("localhost", 9192)
+        return RxNetty.createHttpClient("localhost", 9192, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users)))
-                .flatMap(r -> {
-                    Observable<Catalog> bytesToJson = r.getContent().map(sse -> {
-                        return Catalog.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+                .flatMap(r -> r.getContent().map(sse -> Catalog.fromJson(sse.contentAsString())));
     }
 
     public static class Catalog {
@@ -52,7 +47,7 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
         @SuppressWarnings("unchecked")
         public Observable<Video> videos() {
             try {
-                return Observable.from((List<Integer>) data.get("videos")).map(i -> new Video(i));
+                return Observable.from((List<Integer>) data.get("videos")).map(Video::new);
             } catch (Exception e) {
                 return Observable.error(e);
             }

@@ -1,19 +1,19 @@
 package io.reactivex.lab.edge.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.edge.clients.RatingsCommand.Rating;
-import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
+import io.reactivex.netty.RxNetty;
+import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 
 public class RatingsCommand extends HystrixObservableCommand<Rating> {
     private final List<Video> videos;
@@ -30,14 +30,9 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
 
     @Override
     protected Observable<Rating> run() {
-        return RxNettySSE.createHttpClient("localhost", 9193)
+        return RxNetty.createHttpClient("localhost", 9193, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> {
-                    Observable<Rating> bytesToJson = r.getContent().map(sse -> {
-                        return Rating.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+                .flatMap(r -> r.getContent().map(sse -> Rating.fromJson(sse.contentAsString())));
     }
 
     public static class Rating {

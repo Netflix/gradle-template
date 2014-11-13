@@ -1,17 +1,17 @@
 package io.reactivex.lab.edge.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.edge.clients.UserCommand.User;
-import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
+import io.reactivex.netty.RxNetty;
+import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import rx.Observable;
 
 import java.util.List;
 import java.util.Map;
-
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 
 public class UserCommand extends HystrixObservableCommand<User> {
 
@@ -24,14 +24,9 @@ public class UserCommand extends HystrixObservableCommand<User> {
 
     @Override
     protected Observable<User> run() {
-        return RxNettySSE.createHttpClient("localhost", 9195)
+        return RxNetty.createHttpClient("localhost", 9195, PipelineConfigurators.<ByteBuf> clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds)))
-                .flatMap(r -> {
-                    Observable<User> user = r.getContent().map(sse -> {
-                        return User.fromJson(sse.contentAsString());
-                    });
-                    return user;
-                });
+                .flatMap(r -> r.getContent().map(sse -> User.fromJson(sse.contentAsString())));
     }
 
     public static class User implements ID {

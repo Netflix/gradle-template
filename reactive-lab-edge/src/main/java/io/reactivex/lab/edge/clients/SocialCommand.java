@@ -1,19 +1,19 @@
 package io.reactivex.lab.edge.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.edge.clients.SocialCommand.Social;
 import io.reactivex.lab.edge.clients.UserCommand.User;
-import io.reactivex.lab.edge.common.RxNettySSE;
 import io.reactivex.lab.edge.common.SimpleJson;
+import io.reactivex.netty.RxNetty;
+import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 
 public class SocialCommand extends HystrixObservableCommand<Social> {
 
@@ -31,14 +31,9 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
 
     @Override
     protected Observable<Social> run() {
-        return RxNettySSE.createHttpClient("localhost", 9194)
+        return RxNetty.createHttpClient("localhost", 9194, PipelineConfigurators.<ByteBuf> clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users)))
-                .flatMap(r -> {
-                    Observable<Social> bytesToJson = r.getContent().map(sse -> {
-                        return Social.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+                .flatMap(r -> r.getContent().map(sse -> Social.fromJson(sse.contentAsString())));
     }
 
     public static class Social {

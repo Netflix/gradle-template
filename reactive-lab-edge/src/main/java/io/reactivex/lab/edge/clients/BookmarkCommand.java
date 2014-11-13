@@ -1,14 +1,15 @@
 package io.reactivex.lab.edge.clients;
 
+import com.netflix.hystrix.HystrixCollapser.CollapsedRequest;
+import com.netflix.hystrix.HystrixObservableCollapser;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
-
-import java.util.*;
-
 import rx.functions.Func1;
 
-import com.netflix.hystrix.HystrixCollapser.CollapsedRequest;
-import com.netflix.hystrix.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class BookmarkCommand extends HystrixObservableCollapser<Integer, Bookmark, Bookmark, Video> {
 
@@ -39,12 +40,12 @@ public class BookmarkCommand extends HystrixObservableCollapser<Integer, Bookmar
 
     @Override
     protected Func1<Bookmark, Integer> getBatchReturnTypeKeySelector() {
-        return (Bookmark b) -> b.getVideoId();
+        return Bookmark::getVideoId;
     }
 
     @Override
     protected Func1<Video, Integer> getRequestArgumentKeySelector() {
-        return (Video v) -> v.getId();
+        return Video::getId;
     }
 
     @Override
