@@ -1,11 +1,11 @@
-package io.reactivex.lab.edge.clients;
+package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
-import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
-import io.reactivex.lab.edge.clients.VideoMetadataCommand.VideoMetadata;
-import io.reactivex.lab.edge.common.SimpleJson;
+import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
+import io.reactivex.lab.gateway.clients.VideoMetadataCommand.VideoMetadata;
+import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;

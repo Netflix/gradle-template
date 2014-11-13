@@ -1,10 +1,10 @@
-package io.reactivex.lab.edge.clients;
+package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCollapser.CollapsedRequest;
 import com.netflix.hystrix.HystrixObservableCollapser;
 import com.netflix.hystrix.HystrixObservableCommand;
-import io.reactivex.lab.edge.clients.BookmarksCommand.Bookmark;
-import io.reactivex.lab.edge.clients.PersonalizedCatalogCommand.Video;
+import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
+import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import rx.functions.Func1;
 
 import java.util.ArrayList;

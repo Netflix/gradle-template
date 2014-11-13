@@ -3,24 +3,23 @@ package io.reactivex.lab.gateway.routes;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.StartGatewayServer;
 import io.reactivex.lab.gateway.clients.BookmarkCommand;
+import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand;
+import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.RatingsCommand;
+import io.reactivex.lab.gateway.clients.RatingsCommand.Rating;
 import io.reactivex.lab.gateway.clients.SocialCommand;
 import io.reactivex.lab.gateway.clients.UserCommand;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand;
-import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
-import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
-import io.reactivex.lab.gateway.clients.RatingsCommand.Rating;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand.VideoMetadata;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
+import rx.Observable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import rx.Observable;
 
 public class RouteForDeviceHome {
 
@@ -42,25 +41,18 @@ public class RouteForDeviceHome {
 
         return new UserCommand(userId).observe().flatMap(user -> {
             Observable<Map<String, Object>> catalog = new PersonalizedCatalogCommand(user).observe()
-                    .flatMap(catalogList -> {
-                        return catalogList.videos().<Map<String, Object>> flatMap(video -> {
-                            Observable<Bookmark> bookmark = new BookmarkCommand(video).observe();
-                            Observable<Rating> rating = new RatingsCommand(video).observe();
-                            Observable<VideoMetadata> metadata = new VideoMetadataCommand(video).observe();
-                            return Observable.zip(bookmark, rating, metadata, (b, r, m) -> {
-                                return combineVideoData(video, b, r, m);
-                            });
-                        });
-                    });
+                    .flatMap(catalogList -> catalogList.videos().<Map<String, Object>> flatMap(video -> {
+                        Observable<Bookmark> bookmark = new BookmarkCommand(video).observe();
+                        Observable<Rating> rating = new RatingsCommand(video).observe();
+                        Observable<VideoMetadata> metadata = new VideoMetadataCommand(video).observe();
+                        return Observable.zip(bookmark, rating, metadata, (b, r, m) -> combineVideoData(video, b, r, m));
+                    }));
 
-            Observable<Map<String, Object>> social = new SocialCommand(user).observe().map(s -> {
-                return s.getDataAsMap();
-            });
+            Observable<Map<String, Object>> social = new SocialCommand(user).observe()
+                                                                            .map(SocialCommand.Social::getDataAsMap);
 
             return Observable.merge(catalog, social);
-        }).flatMap(data -> {
-            return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data));
-        });
+        }).flatMap(data -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data)));
     }
 
     private Map<String, Object> combineVideoData(Video video, Bookmark b, Rating r, VideoMetadata m) {
