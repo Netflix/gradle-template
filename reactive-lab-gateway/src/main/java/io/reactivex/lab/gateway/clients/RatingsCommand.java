@@ -76,11 +76,4 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
         }
 
     }
-/*
-
-    public static void main(String[] args) {
-        RxNetty.createHttpClient("127.0.0.1", 9193, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
-               .submit(HttpClientRequest.createGet("?id=1&videoId=2")).flatMap().toBlocking()
-    }
-*/
 }
