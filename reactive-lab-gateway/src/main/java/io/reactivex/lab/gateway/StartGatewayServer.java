@@ -1,14 +1,6 @@
 package io.reactivex.lab.gateway;
 
-import com.netflix.eureka2.client.Eureka;
-import com.netflix.eureka2.client.EurekaClient;
-import com.netflix.eureka2.client.resolver.ServerResolver;
-import com.netflix.eureka2.client.resolver.ServerResolvers;
-import com.netflix.eureka2.interests.Interests;
-import com.netflix.eureka2.transport.EurekaTransports;
-import com.netflix.hystrix.HystrixRequestLog;
-import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller;
-import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
+import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.logging.LogLevel;
@@ -22,16 +14,23 @@ import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+
+import java.util.concurrent.TimeUnit;
+
 import netflix.ocelli.Host;
 import netflix.ocelli.eureka.EurekaMembershipSource;
 import netflix.ocelli.rxnetty.HttpClientPool;
 import rx.Observable;
 import rx.Subscriber;
-import rx.subscriptions.Subscriptions;
 
-import java.util.concurrent.TimeUnit;
-
-import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
+import com.netflix.eureka2.client.Eureka;
+import com.netflix.eureka2.client.EurekaClient;
+import com.netflix.eureka2.client.resolver.ServerResolver;
+import com.netflix.eureka2.client.resolver.ServerResolvers;
+import com.netflix.eureka2.interests.Interests;
+import com.netflix.eureka2.transport.EurekaTransports;
+import com.netflix.hystrix.HystrixRequestLog;
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 
 public class StartGatewayServer {
 
@@ -44,15 +43,17 @@ public class StartGatewayServer {
         ServerResolver.Server discoveryServer = new ServerResolver.Server("127.0.0.1", 7001);
         ServerResolver.Server registrationServer = new ServerResolver.Server("127.0.0.1", 7001);
         EurekaClient client = Eureka.newClientBuilder(ServerResolvers.from(discoveryServer),
-                                                      ServerResolvers.from(registrationServer))
-                                    .withCodec(EurekaTransports.Codec.Json)
-                                    .build();
+                ServerResolvers.from(registrationServer))
+                .withCodec(EurekaTransports.Codec.Json)
+                .build();
+
         EurekaMembershipSource membershipSource = new EurekaMembershipSource(client);
+
         LoadBalancerFactory loadBalancerFactory = new LoadBalancerFactory(membershipSource,
-                                                                         new HttpClientPool<>((Host host) -> RxNetty.<ByteBuf, ServerSentEvent>newHttpClientBuilder(host.getHostName(), host.getPort())
-                                                                                                                    .pipelineConfigurator(clientSseConfigurator())
-                                                                                                                    .enableWireLogging(LogLevel.ERROR)
-                                                                                                                    .build()));
+                new HttpClientPool<>((Host host) -> RxNetty.<ByteBuf, ServerSentEvent> newHttpClientBuilder(host.getHostName(), host.getPort())
+                        .pipelineConfigurator(clientSseConfigurator())
+                        .enableWireLogging(LogLevel.ERROR)
+                        .build()));
 
         /**
          * This is making sure that eureka's client registry is warmed up.
@@ -138,20 +139,20 @@ public class StartGatewayServer {
     }
 
     final static Observable<String> streamPoller = Observable.create((Subscriber<? super String> s) -> {
-        try {
-            System.out.println("Server => Start Hystrix Metric Poller");
-            HystrixMetricsPoller poller = new HystrixMetricsPoller(json -> {
-                s.onNext(json);
-            }, 1000);
-            s.add(Subscriptions.create(() -> {
-                System.out.println("Server => Shutdown Hystrix Stream");
-                poller.shutdown();
-            }));
-            poller.start();
-        } catch (Exception e) {
-            s.onError(e);
-        }
-    }).publish().refCount();
+        //        try {
+        //            System.out.println("Server => Start Hystrix Metric Poller");
+        //            HystrixMetricsPoller poller = new HystrixMetricsPoller(json -> {
+        //                s.onNext(json);
+        //            }, 1000);
+        //            s.add(Subscriptions.create(() -> {
+        //                System.out.println("Server => Shutdown Hystrix Stream");
+        //                poller.shutdown();
+        //            }));
+        //            poller.start();
+        //        } catch (Exception e) {
+        //            s.onError(e);
+        //        }
+        }).publish().refCount();
 
     public static Observable<Void> writeError(HttpServerRequest<?> request, HttpServerResponse<ByteBuf> response, String message) {
         System.err.println("Server => Error [" + request.getPath() + "] => " + message);
