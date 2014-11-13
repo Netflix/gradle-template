@@ -29,7 +29,7 @@ public class RatingsService extends MiddleTierService {
             video.put("actual_user_rating", 4);
             video.put("average_user_rating", 3.1);
             return video;
-        }).flatMap(video -> response.writeStringAndFlush("data : " + SimpleJson.mapToJson(video) + "\n"))
+        }).flatMap(video -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(video) + "\n"))
                          .delay(20, TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latenc
     }
 }
