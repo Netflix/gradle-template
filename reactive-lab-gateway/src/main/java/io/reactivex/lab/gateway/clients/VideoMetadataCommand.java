@@ -1,44 +1,48 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand.VideoMetadata;
-import io.reactivex.lab.gateway.common.RxNettySSE;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import netflix.ocelli.LoadBalancer;
+import netflix.ocelli.rxnetty.HttpClientHolder;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
-
 public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata> {
 
     private final List<Video> videos;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer;
 
-    public VideoMetadataCommand(Video video) {
-        this(Arrays.asList(video));
+    public VideoMetadataCommand(Video video, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
+        this(Arrays.asList(video), loadBalancer);
         // replace with HystrixCollapser
     }
 
-    public VideoMetadataCommand(List<Video> videos) {
+    public VideoMetadataCommand(List<Video> videos, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
         super(HystrixCommandGroupKey.Factory.asKey("VideoMetadata"));
         this.videos = videos;
+        this.loadBalancer = loadBalancer;
     }
 
     @Override
     protected Observable<VideoMetadata> run() {
-        return RxNettySSE.createHttpClient("localhost", 9196)
-                .submit(HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> {
-                    Observable<VideoMetadata> bytesToJson = r.getContent().map(sse -> {
-                        return VideoMetadata.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId",
+                                                                                                              videos));
+        return loadBalancer.choose().map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                                    .flatMap(r -> r.getContent().map(sse -> {
+                                                        String videometa = sse.contentAsString();
+                                                        System.out.println("videometa = " + videometa);
+                                                        return VideoMetadata.fromJson(videometa);
+                                                    })));
     }
 
     public static class VideoMetadata {

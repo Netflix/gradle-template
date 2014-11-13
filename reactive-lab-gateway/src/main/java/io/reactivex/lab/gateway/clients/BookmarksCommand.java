@@ -1,30 +1,33 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
-import io.reactivex.lab.gateway.common.RxNettySSE;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import netflix.ocelli.LoadBalancer;
+import netflix.ocelli.rxnetty.HttpClientHolder;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
-
 public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
     final List<Video> videos;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer;
     final String cacheKey;
 
-    public BookmarksCommand(List<Video> videos) {
+    public BookmarksCommand(List<Video> videos, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
         super(HystrixCommandGroupKey.Factory.asKey("GetBookmarks"));
         this.videos = videos;
-        StringBuffer b = new StringBuffer();
+        this.loadBalancer = loadBalancer;
+        StringBuilder b = new StringBuilder();
         for (Video v : videos) {
             b.append(v.getId()).append("-");
         }
@@ -32,21 +35,20 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
     }
 
     @Override
-    protected Observable<Bookmark> run() {
-        return RxNettySSE.createHttpClient("localhost", 9190)
-                .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> {
-                    Observable<Bookmark> bytesToJson = r.getContent().map(sse -> {
-                        return Bookmark.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+    public Observable<Bookmark> run() {
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet( "/bookmarks?"
+                                                                          + UrlGenerator.generate("videoId", videos));
+        return loadBalancer.choose()
+                           .map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                        .flatMap(r -> r.getContent().map(sse -> Bookmark.fromJson(
+                                                sse.contentAsString()))));
     }
 
     protected Observable<Bookmark> getFallback() {
         List<Bookmark> bs = new ArrayList<>();
         for (Video v : videos) {
-            Map<String, Object> data = new HashMap<String, Object>();
+            Map<String, Object> data = new HashMap<>();
             data.put("position", 0);
             data.put("videoId", v.getId());
             bs.add(new Bookmark(data));

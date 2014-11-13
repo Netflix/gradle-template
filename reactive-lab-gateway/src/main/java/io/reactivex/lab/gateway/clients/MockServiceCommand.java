@@ -1,5 +1,9 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.reactivex.lab.gateway.routes.mock.BackendResponse;
@@ -7,11 +11,6 @@ import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.client.HttpClientResponse;
 import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
 
 public class MockServiceCommand extends HystrixObservableCommand<BackendResponse> {
 
@@ -36,12 +35,7 @@ public class MockServiceCommand extends HystrixObservableCommand<BackendResponse
     protected Observable<BackendResponse> run() {
         return RxNetty.createHttpClient("localhost", 9100)
                 .submit(HttpClientRequest.createGet("/mock.json?numItems=" + numItems + "&itemSize=" + itemSize + "&delay=" + delay + "&id=" + id))
-                .flatMap((HttpClientResponse<ByteBuf> r) -> {
-                    Observable<BackendResponse> bytesToJson = r.getContent().map(b -> {
-                        return BackendResponse.fromJson(new ByteBufInputStream(b));
-                    });
-                    return bytesToJson;
-                });
+                .flatMap((HttpClientResponse<ByteBuf> r) -> r.getContent().map(b -> BackendResponse.fromJson(new ByteBufInputStream(b))));
     }
 
     protected Observable<BackendResponse> getFallback() {

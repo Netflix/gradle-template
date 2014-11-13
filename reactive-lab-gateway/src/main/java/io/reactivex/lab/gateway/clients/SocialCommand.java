@@ -1,44 +1,48 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
+import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.SocialCommand.Social;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
-import io.reactivex.lab.gateway.common.RxNettySSE;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import netflix.ocelli.LoadBalancer;
+import netflix.ocelli.rxnetty.HttpClientHolder;
+import rx.Observable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
-
 public class SocialCommand extends HystrixObservableCommand<Social> {
 
     private final List<User> users;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer;
 
-    public SocialCommand(User user) {
-        this(Arrays.asList(user));
+    public SocialCommand(User user, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
+        this(Arrays.asList(user), loadBalancer);
         // replace with HystrixCollapser
     }
 
-    public SocialCommand(List<User> users) {
+    public SocialCommand(List<User> users, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
         super(HystrixCommandGroupKey.Factory.asKey("Social"));
         this.users = users;
+        this.loadBalancer = loadBalancer;
     }
 
     @Override
     protected Observable<Social> run() {
-        return RxNettySSE.createHttpClient("localhost", 9194)
-                .submit(HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users)))
-                .flatMap(r -> {
-                    Observable<Social> bytesToJson = r.getContent().map(sse -> {
-                        return Social.fromJson(sse.contentAsString());
-                    });
-                    return bytesToJson;
-                });
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId",
+                                                                                                           users));
+        return loadBalancer.choose().map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                                    .flatMap(r -> r.getContent().map(sse -> {
+                                                        String social = sse.contentAsString();
+                                                        System.out.println("social = " + social);
+                                                        return Social.fromJson(social);
+                                                    })));
     }
 
     public static class Social {

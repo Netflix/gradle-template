@@ -1,5 +1,6 @@
 package io.reactivex.lab.services.impls;
 
+import com.netflix.eureka2.client.EurekaClient;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
@@ -10,6 +11,10 @@ import rx.Observable;
 import java.util.List;
 
 public class MockService extends MiddleTierService {
+
+    public MockService(EurekaClient client) {
+        super("reactive-lab-mock-service", client);
+    }
 
     @Override
     protected Observable<Void> handleRequest(HttpServerRequest<?> request, HttpServerResponse<ServerSentEvent> response) {

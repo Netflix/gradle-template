@@ -1,17 +1,14 @@
 package io.reactivex.lab.services.impls;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.concurrent.TimeUnit;
-
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
-
 import rx.Observable;
 import rx.Scheduler.Worker;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
+
+import java.io.StringWriter;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Generate responses with varying types of payloads depending on request arguments.
@@ -51,8 +48,6 @@ public class MockResponse {
      *            Number of items in response.
      * 
      * @return String json
-     * @throws IOException
-     * @throws JsonGenerationException
      */
     public static Observable<String> generateJson(long id, int delay, int itemSize, int numItems) {
         return Observable.create((Subscriber<? super String> subscriber) -> {
