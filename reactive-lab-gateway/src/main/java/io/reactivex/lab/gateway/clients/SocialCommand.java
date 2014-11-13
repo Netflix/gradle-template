@@ -33,7 +33,11 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
     protected Observable<Social> run() {
         return RxNetty.createHttpClient("localhost", 9194, PipelineConfigurators.<ByteBuf> clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users)))
-                .flatMap(r -> r.getContent().map(sse -> Social.fromJson(sse.contentAsString())));
+                .flatMap(r -> r.getContent().map(sse -> {
+                    String social = sse.contentAsString();
+                    System.out.println("social = " + social);
+                    return Social.fromJson(social);
+                }));
     }
 
     public static class Social {

@@ -32,7 +32,11 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
     protected Observable<Rating> run() {
         return RxNetty.createHttpClient("localhost", 9193, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> r.getContent().map(sse -> Rating.fromJson(sse.contentAsString())));
+                .flatMap(r -> r.getContent().map(sse -> {
+                    String ratings = sse.contentAsString();
+                    System.out.println("ratings = " + ratings);
+                    return Rating.fromJson(ratings);
+                }));
     }
 
     public static class Rating {

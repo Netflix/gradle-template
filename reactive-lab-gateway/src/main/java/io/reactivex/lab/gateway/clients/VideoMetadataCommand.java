@@ -33,7 +33,11 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
     protected Observable<VideoMetadata> run() {
         return RxNetty.createHttpClient("localhost", 9196, PipelineConfigurators.<ByteBuf> clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> r.getContent().map(sse -> VideoMetadata.fromJson(sse.contentAsString())));
+                .flatMap(r -> r.getContent().map(sse -> {
+                    String videometa = sse.contentAsString();
+                    System.out.println("videometa = " + videometa);
+                    return VideoMetadata.fromJson(videometa);
+                }));
     }
 
     public static class VideoMetadata {

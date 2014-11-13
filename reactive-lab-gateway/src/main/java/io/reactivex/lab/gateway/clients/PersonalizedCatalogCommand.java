@@ -33,7 +33,11 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
     protected Observable<Catalog> run() {
         return RxNetty.createHttpClient("localhost", 9192, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users)))
-                .flatMap(r -> r.getContent().map(sse -> Catalog.fromJson(sse.contentAsString())));
+                .flatMap(r -> r.getContent().map(sse -> {
+                    String catalog = sse.contentAsString();
+                    System.out.println("catalog = " + catalog);
+                    return Catalog.fromJson(catalog);
+                }));
     }
 
     public static class Catalog {

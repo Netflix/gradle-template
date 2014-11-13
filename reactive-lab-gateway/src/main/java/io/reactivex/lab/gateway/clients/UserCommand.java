@@ -26,7 +26,11 @@ public class UserCommand extends HystrixObservableCommand<User> {
     protected Observable<User> run() {
         return RxNetty.createHttpClient("localhost", 9195, PipelineConfigurators.<ByteBuf> clientSseConfigurator())
                 .submit(HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds)))
-                .flatMap(r -> r.getContent().map(sse -> User.fromJson(sse.contentAsString())));
+                .flatMap(r -> r.getContent().map(sse -> {
+                    String user = sse.contentAsString();
+                    System.out.println("user = " + user);
+                    return User.fromJson(user);
+                }));
     }
 
     public static class User implements ID {

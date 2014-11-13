@@ -1,5 +1,8 @@
 package io.reactivex.lab.gateway;
 
+import com.netflix.hystrix.HystrixRequestLog;
+import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller;
+import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.lab.gateway.routes.RouteForDeviceHome;
@@ -10,22 +13,19 @@ import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-
-import java.util.concurrent.TimeUnit;
-
 import rx.Observable;
 import rx.Subscriber;
 import rx.subscriptions.Subscriptions;
 
-import com.netflix.hystrix.HystrixRequestLog;
-import com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsPoller;
-import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
+import java.util.concurrent.TimeUnit;
 
 public class StartGatewayServer {
 
     public static void main(String... args) {
         // hystrix stream => http://localhost:9999
         startHystrixMetricsStream();
+
+        RouteForDeviceHome.getInstance();
 
         System.out.println("Server => Starting at http://localhost:8080/");
         System.out.println("   Sample URLs: ");
@@ -41,7 +41,7 @@ public class StartGatewayServer {
             return Observable.defer(() -> {
                 HystrixRequestContext.initializeContext();
                 try {
-                    return handleRoutes(request, response);
+                    return handleRoutes(request, response).doOnCompleted(response::close);
                 } catch (Throwable e) {
                     System.err.println("Server => Error [" + request.getPath() + "] => " + e);
                     response.setStatus(HttpResponseStatus.BAD_REQUEST);

@@ -9,6 +9,9 @@ import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import netflix.ocelli.LoadBalancer;
+import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
 import java.util.ArrayList;
@@ -19,11 +22,13 @@ import java.util.Map;
 public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
     final List<Video> videos;
+    private final LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer;
     final String cacheKey;
 
-    public BookmarksCommand(List<Video> videos) {
+    public BookmarksCommand(List<Video> videos, LoadBalancer<HttpClientHolder<ByteBuf, ServerSentEvent>> loadBalancer) {
         super(HystrixCommandGroupKey.Factory.asKey("GetBookmarks"));
         this.videos = videos;
+        this.loadBalancer = loadBalancer;
         StringBuilder b = new StringBuilder();
         for (Video v : videos) {
             b.append(v.getId()).append("-");
@@ -32,10 +37,31 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
     }
 
     @Override
-    protected Observable<Bookmark> run() {
+    public Observable<Bookmark> run() {
+/*
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet( "/bookmarks?"
+                                                                          + UrlGenerator.generate("videoId", videos));
+        return loadBalancer.choose()
+                           .map(holder -> {
+                               return holder.getClient();
+                           })
+                           .flatMap(client -> {
+                               return client.submit(request)
+                                            .flatMap(r -> {
+                                                return r.getContent().map(sse -> {
+                                                    return Bookmark.fromJson(sse.contentAsString());
+                                                });
+                                            });
+                           });
+*/
         return RxNetty.createHttpClient("localhost", 9190, PipelineConfigurators.<ByteBuf>clientSseConfigurator())
-                .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
-                .flatMap(r -> r.getContent().map(sse -> Bookmark.fromJson(sse.contentAsString())));
+                      .submit(HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos)))
+                      .flatMap(r -> r.getContent().map(sse -> {
+                          String json = sse.contentAsString();
+                          System.out.println("Returning bookmark: " + json);
+                          return Bookmark.fromJson(json);
+                      }));
+
     }
 
     protected Observable<Bookmark> getFallback() {
