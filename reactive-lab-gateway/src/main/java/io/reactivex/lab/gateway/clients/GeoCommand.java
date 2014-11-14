@@ -1,21 +1,19 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.GeoCommand.GeoIP;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-
-import java.util.List;
-import java.util.Map;
-
 import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
+import java.util.List;
+import java.util.Map;
 
 public class GeoCommand extends HystrixObservableCommand<GeoIP> {
 
@@ -31,10 +29,12 @@ public class GeoCommand extends HystrixObservableCommand<GeoIP> {
     @Override
     protected Observable<GeoIP> run() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/geo?" + UrlGenerator.generate("ip", ips));
-        return loadBalancer.choose().map(holder -> holder.getClient())
-                .flatMap(client -> client.submit(request)
-                        .flatMap(r -> r.getContent()
-                                .map(sse -> GeoIP.fromJson(sse.contentAsString()))));
+        return loadBalancer.choose()
+                           .map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                                    .flatMap(r -> r.getContent()
+                                                                   .map((ServerSentEvent sse) -> GeoIP.fromJson(sse.contentAsString()))))
+                           .retry(1);
     }
 
     public static class GeoIP {

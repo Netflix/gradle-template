@@ -1,12 +1,11 @@
 package io.reactivex.lab.gateway.loadbalancer;
 
+import com.netflix.eureka2.interests.Interests;
+import com.netflix.eureka2.registry.NetworkAddress.ProtocolType;
+import com.netflix.eureka2.registry.ServicePort;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.client.HttpClient;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-
-import java.util.HashSet;
-import java.util.stream.Collectors;
-
 import netflix.ocelli.Host;
 import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.LoadBalancers;
@@ -19,9 +18,10 @@ import netflix.ocelli.rxnetty.RxNettyFailureDetector;
 import netflix.ocelli.rxnetty.RxNettyPendingRequests;
 import rx.Observable;
 
-import com.netflix.eureka2.interests.Interests;
-import com.netflix.eureka2.registry.ServicePort;
-import com.netflix.eureka2.registry.NetworkAddress.ProtocolType;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * A utility to create {@link LoadBalancer} instances for different mid-tier services.
@@ -50,11 +50,22 @@ public class LoadBalancerFactory {
             return new Host(ipAddress, portToUse.getPort());
         });
 
+        final Map<Host, HttpClientHolder<ByteBuf, ServerSentEvent>> hostVsHolders = new ConcurrentHashMap<>();
+
+        String lbName = targetVip + "-lb";
         return LoadBalancers.newBuilder(eurekaHostSource.map(
                 hostEvent -> {
                     HttpClient<ByteBuf, ServerSentEvent> client = clientPool.getClientForHost(hostEvent.getClient());
-                    return new MembershipEvent<>(hostEvent.getType(), new HttpClientHolder<>(client));
+                    HttpClientHolder<ByteBuf, ServerSentEvent> holder;
+                    if (hostEvent.getType() == MembershipEvent.EventType.REMOVE) {
+                        holder = hostVsHolders.remove(hostEvent.getClient());
+                    } else {
+                        holder = new HttpClientHolder<>(client);
+                        hostVsHolders.put(hostEvent.getClient(), holder);
+                    }
+                    return new MembershipEvent<>(hostEvent.getType(), holder);
                 })).withWeightingStrategy(new LinearWeightingStrategy<>(new RxNettyPendingRequests<>()))
+                   .withName(lbName)
                 .withFailureDetector(new RxNettyFailureDetector<>()).build();
     }
 }

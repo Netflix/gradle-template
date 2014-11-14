@@ -1,19 +1,16 @@
 package io.reactivex.lab.gateway.loadbalancer;
 
-import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
-import io.netty.buffer.ByteBuf;
-import io.netty.handler.logging.LogLevel;
-import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-import netflix.ocelli.Host;
-import netflix.ocelli.eureka.EurekaMembershipSource;
-import netflix.ocelli.rxnetty.HttpClientPool;
-
 import com.netflix.eureka2.client.Eureka;
 import com.netflix.eureka2.client.EurekaClient;
 import com.netflix.eureka2.client.resolver.ServerResolver;
 import com.netflix.eureka2.client.resolver.ServerResolvers;
 import com.netflix.eureka2.interests.Interests;
+import io.netty.buffer.ByteBuf;
+import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
+import netflix.ocelli.eureka.EurekaMembershipSource;
+import netflix.ocelli.rxnetty.HttpClientPool;
+
+import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
 
 /**
  * Lifecycle of LoadBalancer for app and static accessor.
@@ -26,7 +23,7 @@ public class DiscoveryAndLoadBalancer {
     public static final Integer EUREKA_SERVER_READ_PORT = Integer.getInteger("reactivelab.eureka.server.read.port", 7001);
     public static final Integer EUREKA_SERVER_WRITE_PORT = Integer.getInteger("reactivelab.eureka.server.write.port", 7002);
 
-    public static final LoadBalancerFactory getFactory() {
+    public static LoadBalancerFactory getFactory() {
         return Initializer.factory;
     }
 
@@ -42,10 +39,7 @@ public class DiscoveryAndLoadBalancer {
             EurekaMembershipSource membershipSource = new EurekaMembershipSource(client);
 
             _lb = new LoadBalancerFactory(membershipSource,
-                    new HttpClientPool<>((Host host) -> RxNetty.<ByteBuf, ServerSentEvent> newHttpClientBuilder(host.getHostName(), host.getPort())
-                            .pipelineConfigurator(clientSseConfigurator())
-                            .enableWireLogging(LogLevel.ERROR)
-                            .build()));
+                    new HttpClientPool<ByteBuf, ServerSentEvent>(clientSseConfigurator()));
 
             client.forInterest(Interests.forFullRegistry()).forEach(System.out::println);
             
