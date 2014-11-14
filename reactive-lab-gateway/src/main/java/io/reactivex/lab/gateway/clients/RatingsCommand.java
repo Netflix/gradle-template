@@ -1,5 +1,7 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.RatingsCommand.Rating;
@@ -7,17 +9,13 @@ import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class RatingsCommand extends HystrixObservableCommand<Rating> {
     private final List<Video> videos;
@@ -37,16 +35,12 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
     @Override
     protected Observable<Rating> run() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos));
-        return loadBalancer.choose().map(holder -> holder.getClient())
-                .flatMap(client -> {
-                    return client.submit(request)
-                            .flatMap(r -> {
-                                return r.getContent().map(sse -> {
-                                    String ratings = sse.contentAsString();
-                                    return Rating.fromJson(ratings);
-                                });
-                            });
-                });
+        return loadBalancer.choose()
+                           .map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                                    .flatMap(r -> r.getContent()
+                                                                   .map((ServerSentEvent sse) -> Rating.fromJson(sse.contentAsString()))))
+                           .retry(1);
     }
 
     public static class Rating {

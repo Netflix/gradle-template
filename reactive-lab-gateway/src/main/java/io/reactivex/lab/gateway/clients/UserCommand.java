@@ -1,21 +1,19 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-
-import java.util.List;
-import java.util.Map;
-
 import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
+import java.util.List;
+import java.util.Map;
 
 public class UserCommand extends HystrixObservableCommand<User> {
 
@@ -33,11 +31,12 @@ public class UserCommand extends HystrixObservableCommand<User> {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> client.submit(request)
-                        .flatMap(r -> r.getContent().map(
-                                sse -> {
-                                    String user = sse.contentAsString();
-                                    return User.fromJson(user);
-                                })));
+                                         .flatMap(r -> r.getContent().map(
+                                                 (ServerSentEvent sse) -> {
+                                                     String user = sse.contentAsString();
+                                                     return User.fromJson(user);
+                                                 })))
+                .retry(1);
     }
 
     public static class User implements ID {

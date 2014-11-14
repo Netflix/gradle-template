@@ -1,5 +1,7 @@
 package io.reactivex.lab.gateway.clients;
 
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Catalog;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
@@ -7,17 +9,13 @@ import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog> {
 
@@ -38,12 +36,12 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
     @Override
     protected Observable<Catalog> run() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users));
-        return loadBalancer.choose().map(holder -> holder.getClient())
-                .flatMap(client -> client.submit(request)
-                        .flatMap(r -> r.getContent().map(sse -> {
-                            String catalog = sse.contentAsString();
-                            return Catalog.fromJson(catalog);
-                        })));
+        return loadBalancer.choose()
+                           .map(holder -> holder.getClient())
+                           .flatMap(client -> client.submit(request)
+                                                    .flatMap(r -> r.getContent()
+                                                                   .map((ServerSentEvent sse) -> Catalog.fromJson(sse.contentAsString()))))
+                           .retry(1);
     }
 
     public static class Catalog {
