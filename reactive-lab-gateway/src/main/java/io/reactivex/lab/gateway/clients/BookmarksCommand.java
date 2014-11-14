@@ -1,21 +1,23 @@
 package io.reactivex.lab.gateway.clients;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.BookmarksCommand.Bookmark;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.common.SimpleJson;
 import io.reactivex.netty.protocol.http.client.HttpClientRequest;
 import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
-import netflix.ocelli.LoadBalancer;
-import netflix.ocelli.rxnetty.HttpClientHolder;
-import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import netflix.ocelli.LoadBalancer;
+import netflix.ocelli.rxnetty.HttpClientHolder;
+import rx.Observable;
+
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixObservableCommand;
 
 public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
@@ -36,13 +38,12 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
 
     @Override
     public Observable<Bookmark> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet( "/bookmarks?"
-                                                                          + UrlGenerator.generate("videoId", videos));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
-                           .map(holder -> holder.getClient())
-                           .flatMap(client -> client.submit(request)
-                                        .flatMap(r -> r.getContent().map(sse -> Bookmark.fromJson(
-                                                sse.contentAsString()))));
+                .map(holder -> holder.getClient())
+                .flatMap(client -> client.submit(request)
+                        .flatMap(r -> r.getContent().map(sse -> Bookmark.fromJson(
+                                sse.contentAsString()))));
     }
 
     protected Observable<Bookmark> getFallback() {

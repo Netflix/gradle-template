@@ -29,7 +29,7 @@ public class VideoMetadataService extends MiddleTierService {
             video.put("other_data", "goes_here");
             return video;
         }).flatMap(video -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(video) + "\n")
-                                    .doOnCompleted(response::close))
-                         .delay(((long) (Math.random() * 20) + 20), TimeUnit.MILLISECONDS); // simulate latency
+                .doOnCompleted(response::close))
+                .delay(((long) (Math.random() * 20) + 20), TimeUnit.MILLISECONDS); // simulate latency
     }
 }

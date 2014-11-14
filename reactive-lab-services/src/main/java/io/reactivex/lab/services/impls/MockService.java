@@ -45,8 +45,8 @@ public class MockService extends MiddleTierService {
 
         response.setStatus(HttpResponseStatus.OK);
         return MockResponse.generateJson(id, delay, itemSize, numItems)
-                           .flatMap(json -> response.writeStringAndFlush("data:" + json + "\n"))
-                           .doOnCompleted(response::close);
+                .flatMap(json -> response.writeStringAndFlush("data:" + json + "\n"))
+                .doOnCompleted(response::close);
     }
 
 }

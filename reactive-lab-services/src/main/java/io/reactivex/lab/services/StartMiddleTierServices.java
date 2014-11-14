@@ -1,10 +1,5 @@
 package io.reactivex.lab.services;
 
-import com.netflix.eureka2.client.Eureka;
-import com.netflix.eureka2.client.EurekaClient;
-import com.netflix.eureka2.client.resolver.ServerResolver;
-import com.netflix.eureka2.client.resolver.ServerResolvers;
-import com.netflix.eureka2.transport.EurekaTransports;
 import io.reactivex.lab.services.impls.BookmarksService;
 import io.reactivex.lab.services.impls.GeoService;
 import io.reactivex.lab.services.impls.MockService;
@@ -13,52 +8,45 @@ import io.reactivex.lab.services.impls.RatingsService;
 import io.reactivex.lab.services.impls.SocialService;
 import io.reactivex.lab.services.impls.UserService;
 import io.reactivex.lab.services.impls.VideoMetadataService;
+import rx.Observable;
+
+import com.netflix.eureka2.client.Eureka;
+import com.netflix.eureka2.client.EurekaClient;
+import com.netflix.eureka2.client.resolver.ServerResolver;
+import com.netflix.eureka2.client.resolver.ServerResolvers;
 
 public class StartMiddleTierServices {
 
     public static void main(String... args) {
-        int startingPort = 9190;
+        /* Eureka Server Config */
+        System.setProperty("reactivelab.eureka.server.host", StartEurekaServer.EUREKA_SERVER_HOST);
+        System.setProperty("reactivelab.eureka.server.read.port", String.valueOf(StartEurekaServer.EUREKA_SERVER_READ_PORT));
+        System.setProperty("reactivelab.eureka.server.write.port", String.valueOf(StartEurekaServer.EUREKA_SERVER_WRITE_PORT));
+        System.setProperty("eureka2.heartbeat.intervalMillis", "1000"); // set lower for demo/playground purposes
 
+        /* Create a EurekaClient to be used by the services for registering for discovery */
+        ServerResolver.Server discoveryServer = new ServerResolver.Server(StartEurekaServer.EUREKA_SERVER_HOST, StartEurekaServer.EUREKA_SERVER_READ_PORT);
+        ServerResolver.Server registrationServer = new ServerResolver.Server(StartEurekaServer.EUREKA_SERVER_HOST, StartEurekaServer.EUREKA_SERVER_WRITE_PORT);
+        EurekaClient eurekaClient = Eureka.newClientBuilder(ServerResolvers.from(discoveryServer), ServerResolvers.from(registrationServer)).build();
+
+        /* what port we want to begin at for launching the services */
+        int startingPort = 9190;
         if (args.length > 0) {
             startingPort = Integer.parseInt(args[0]);
         }
 
-        ServerResolver.Server discoveryServer = new ServerResolver.Server("127.0.0.1", StartEurekaServer.READ_SERVER_PORT);
-        ServerResolver.Server registrationServer = new ServerResolver.Server("127.0.0.1", StartEurekaServer.WRITE_SERVER_PORT);
-        EurekaClient client = Eureka.newClientBuilder(ServerResolvers.from(discoveryServer),
-                                                      ServerResolvers.from(registrationServer))
-                                    .withCodec(EurekaTransports.Codec.Json)
-                                    .build();
-
         System.out.println("Starting services ...");
+        new MockService(eurekaClient).start(startingPort);
+        new BookmarksService(eurekaClient).start(++startingPort);
+        new GeoService(eurekaClient).start(++startingPort);
+        new PersonalizedCatalogService(eurekaClient).start(++startingPort);
+        new RatingsService(eurekaClient).start(++startingPort);
+        new SocialService(eurekaClient).start(++startingPort);
+        new UserService(eurekaClient).start(++startingPort);
+        new VideoMetadataService(eurekaClient).start(++startingPort);
 
-        MockService mockService = new MockService(client);
-        mockService.start(9100);
-        BookmarksService bookmarksService = new BookmarksService(client);
-        bookmarksService.start(startingPort);
-        GeoService geoService = new GeoService(client);
-        geoService.start(++startingPort);
-        PersonalizedCatalogService personalizedCatalogService = new PersonalizedCatalogService(client);
-        personalizedCatalogService.start(++startingPort);
-        RatingsService ratingsService = new RatingsService(client);
-        ratingsService.start(++startingPort);
-        SocialService socialService = new SocialService(client);
-        socialService.start(++startingPort);
-        UserService userService = new UserService(client);
-        userService.start(++startingPort);
-        VideoMetadataService videoMetadataService = new VideoMetadataService(client);
-        videoMetadataService.startAndWait(++startingPort);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            mockService.stop();
-            bookmarksService.stop();
-            geoService.stop();
-            personalizedCatalogService.stop();
-            ratingsService.stop();
-            socialService.stop();
-            userService.stop();
-            videoMetadataService.stop();
-        }));
+        // block forever
+        Observable.never().toBlocking().single();
     }
 
 }

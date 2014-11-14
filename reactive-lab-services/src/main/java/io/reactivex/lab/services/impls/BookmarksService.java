@@ -35,6 +35,6 @@ public class BookmarksService extends MiddleTierService {
             video.put("position", (int) (Math.random() * 5000));
             return video;
         }).flatMap(video -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(video) + "\n"))
-                         .delay(latency, TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
+                .delay(latency, TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
     }
 }

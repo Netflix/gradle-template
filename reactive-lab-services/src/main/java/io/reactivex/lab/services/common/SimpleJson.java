@@ -1,6 +1,5 @@
 package io.reactivex.lab.services.common;
 
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectReader;
 import org.codehaus.jackson.map.ObjectWriter;

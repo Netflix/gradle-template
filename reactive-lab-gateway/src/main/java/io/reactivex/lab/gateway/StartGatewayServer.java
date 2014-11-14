@@ -1,10 +1,9 @@
 package io.reactivex.lab.gateway;
 
-import static io.reactivex.netty.pipeline.PipelineConfigurators.clientSseConfigurator;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.logging.LogLevel;
-import io.reactivex.lab.gateway.clients.LoadBalancerFactory;
+import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
+import io.reactivex.lab.gateway.loadbalancer.LoadBalancerFactory;
 import io.reactivex.lab.gateway.routes.RouteForDeviceHome;
 import io.reactivex.lab.gateway.routes.mock.TestRouteBasic;
 import io.reactivex.lab.gateway.routes.mock.TestRouteWithHystrix;
@@ -13,61 +12,33 @@ import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-import io.reactivex.netty.protocol.http.sse.ServerSentEvent;
 
 import java.util.concurrent.TimeUnit;
 
-import netflix.ocelli.Host;
-import netflix.ocelli.eureka.EurekaMembershipSource;
-import netflix.ocelli.rxnetty.HttpClientPool;
 import rx.Observable;
 import rx.Subscriber;
 
-import com.netflix.eureka2.client.Eureka;
-import com.netflix.eureka2.client.EurekaClient;
-import com.netflix.eureka2.client.resolver.ServerResolver;
-import com.netflix.eureka2.client.resolver.ServerResolvers;
-import com.netflix.eureka2.interests.Interests;
-import com.netflix.eureka2.transport.EurekaTransports;
 import com.netflix.hystrix.HystrixRequestLog;
 import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
 
 public class StartGatewayServer {
 
-    private static RouteForDeviceHome routeForDeviceHome;
+    static {
+        // discovery config
+        System.setProperty("reactivelab.eureka.server.host", "127.0.0.1");
+        System.setProperty("reactivelab.eureka.server.read.port", "7001");
+        System.setProperty("reactivelab.eureka.server.write.port", "7002");
+    }
 
     public static void main(String... args) {
+        // initialize
+        DiscoveryAndLoadBalancer.getFactory();
         // hystrix stream => http://localhost:9999
         startHystrixMetricsStream();
 
-        ServerResolver.Server discoveryServer = new ServerResolver.Server("127.0.0.1", 7001);
-        ServerResolver.Server registrationServer = new ServerResolver.Server("127.0.0.1", 7001);
-        EurekaClient client = Eureka.newClientBuilder(ServerResolvers.from(discoveryServer),
-                ServerResolvers.from(registrationServer))
-                .withCodec(EurekaTransports.Codec.Json)
-                .build();
-
-        EurekaMembershipSource membershipSource = new EurekaMembershipSource(client);
-
-        LoadBalancerFactory loadBalancerFactory = new LoadBalancerFactory(membershipSource,
-                new HttpClientPool<>((Host host) -> RxNetty.<ByteBuf, ServerSentEvent> newHttpClientBuilder(host.getHostName(), host.getPort())
-                        .pipelineConfigurator(clientSseConfigurator())
-                        .enableWireLogging(LogLevel.ERROR)
-                        .build()));
-
-        /**
-         * This is making sure that eureka's client registry is warmed up.
-         */
-        client.forInterest(Interests.forFullRegistry()).take(1).toBlocking().single();
-
-        routeForDeviceHome = new RouteForDeviceHome(loadBalancerFactory);
-
         System.out.println("Server => Starting at http://localhost:8080/");
         System.out.println("   Sample URLs: ");
-        System.out.println("      - /device/home");
-        System.out.println("      - /helloworld.js");
-        System.out.println("      - /hello.js?name=Dave");
-        System.out.println("      - /async.js");
+        System.out.println("      - http://localhost:8080/device/home?userId=123");
         System.out.println("----------------------------------------------------------------");
 
         // start web services => http://localhost:8080
@@ -103,7 +74,7 @@ public class StartGatewayServer {
      */
     private static Observable<Void> handleRoutes(HttpServerRequest<ByteBuf> request, HttpServerResponse<ByteBuf> response) {
         if (request.getPath().equals("/device/home")) {
-            return routeForDeviceHome.handle(request, response);
+            return new RouteForDeviceHome().handle(request, response);
         } else if (request.getPath().equals("/testBasic")) {
             return TestRouteBasic.handle(request, response);
         } else if (request.getPath().equals("/testWithSimpleFaultTolerance")) {

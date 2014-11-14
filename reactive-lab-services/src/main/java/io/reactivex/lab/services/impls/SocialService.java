@@ -27,7 +27,7 @@ public class SocialService extends MiddleTierService {
             user.put("friends", Arrays.asList(randomUser(), randomUser(), randomUser(), randomUser()));
             return user;
         }).flatMap(list -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(list) + "\n"))
-                         .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
+                .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS).doOnCompleted(response::close); // simulate latency
     }
 
     private static int randomUser() {

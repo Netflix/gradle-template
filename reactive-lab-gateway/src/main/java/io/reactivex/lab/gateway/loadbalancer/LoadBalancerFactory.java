@@ -1,4 +1,4 @@
-package io.reactivex.lab.gateway.clients;
+package io.reactivex.lab.gateway.loadbalancer;
 
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.client.HttpClient;
@@ -34,7 +34,7 @@ public class LoadBalancerFactory {
     private final HttpClientPool<ByteBuf, ServerSentEvent> clientPool;
 
     public LoadBalancerFactory(EurekaMembershipSource membershipSource,
-                               HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
+            HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
         this.membershipSource = membershipSource;
         this.clientPool = clientPool;
     }
@@ -51,10 +51,10 @@ public class LoadBalancerFactory {
         });
 
         return LoadBalancers.newBuilder(eurekaHostSource.map(
-                        hostEvent -> {
-                            HttpClient<ByteBuf, ServerSentEvent> client = clientPool.getClientForHost(hostEvent.getClient());
-                            return new MembershipEvent<>(hostEvent.getType(), new HttpClientHolder<>(client));
-                        })).withWeightingStrategy(new LinearWeightingStrategy<>(new RxNettyPendingRequests<>()))
-                           .withFailureDetector(new RxNettyFailureDetector<>()).build();
+                hostEvent -> {
+                    HttpClient<ByteBuf, ServerSentEvent> client = clientPool.getClientForHost(hostEvent.getClient());
+                    return new MembershipEvent<>(hostEvent.getType(), new HttpClientHolder<>(client));
+                })).withWeightingStrategy(new LinearWeightingStrategy<>(new RxNettyPendingRequests<>()))
+                .withFailureDetector(new RxNettyFailureDetector<>()).build();
     }
 }

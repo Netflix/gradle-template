@@ -32,7 +32,7 @@ public class GeoService extends MiddleTierService {
                 data.put(ip, ip_data);
             }
             return response.writeStringAndFlush("data: " + SimpleJson.mapToJson(data) + "\n")
-                           .doOnCompleted(response::close);
+                    .doOnCompleted(response::close);
         }).delay(10, TimeUnit.MILLISECONDS);
     }
 }

@@ -30,7 +30,7 @@ public class PersonalizedCatalogService extends MiddleTierService {
             userData.put("videos", Arrays.asList(12345, 23456, 34567, 45678, 56789, 67890));
             return userData;
         }).flatMap(list -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(list) + "\n"))
-                         .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS)
-                         .doOnCompleted(response::close); // simulate latency
+                .delay(((long) (Math.random() * 100) + 20), TimeUnit.MILLISECONDS)
+                .doOnCompleted(response::close); // simulate latency
     }
 }

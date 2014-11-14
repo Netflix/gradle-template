@@ -35,15 +35,15 @@ public abstract class MiddleTierService {
         System.out.println("Start " + getClass().getSimpleName() + " on port: " + port);
         return RxNetty.createHttpServer(port, (request, response) -> {
             // System.out.println("Server => Request: " + request.getPath());
-            try {
-                return handleRequest(request, response);
-            } catch (Throwable e) {
-                e.printStackTrace();
-                System.err.println("Server => Error [" + request.getPath() + "] => " + e);
-                response.setStatus(HttpResponseStatus.BAD_REQUEST);
-                return response.writeStringAndFlush("data: Error 500: Bad Request\n" + e.getMessage() + "\n");
-            }
-        }, PipelineConfigurators.<ByteBuf> serveSseConfigurator());
+                try {
+                    return handleRequest(request, response);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    System.err.println("Server => Error [" + request.getPath() + "] => " + e);
+                    response.setStatus(HttpResponseStatus.BAD_REQUEST);
+                    return response.writeStringAndFlush("data: Error 500: Bad Request\n" + e.getMessage() + "\n");
+                }
+            }, PipelineConfigurators.<ByteBuf> serveSseConfigurator());
     }
 
     public void start(int port) {
