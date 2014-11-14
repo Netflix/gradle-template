@@ -34,7 +34,7 @@ public class LoadBalancerFactory {
     private final HttpClientPool<ByteBuf, ServerSentEvent> clientPool;
 
     public LoadBalancerFactory(EurekaMembershipSource membershipSource,
-            HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
+                               HttpClientPool<ByteBuf, ServerSentEvent> clientPool) {
         this.membershipSource = membershipSource;
         this.clientPool = clientPool;
     }
