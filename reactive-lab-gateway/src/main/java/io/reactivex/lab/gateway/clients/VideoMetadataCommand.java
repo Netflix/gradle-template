@@ -37,13 +37,11 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
 
     @Override
     protected Observable<VideoMetadata> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId",
-                videos));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> client.submit(request)
                         .flatMap(r -> r.getContent().map(sse -> {
                             String videometa = sse.contentAsString();
-                            System.out.println("videometa = " + videometa);
                             return VideoMetadata.fromJson(videometa);
                         })));
     }

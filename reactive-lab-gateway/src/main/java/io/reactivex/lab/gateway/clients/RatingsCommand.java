@@ -36,18 +36,13 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
 
     @Override
     protected Observable<Rating> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId",
-                videos));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> {
-                    System.out.println("RatingsCommand.run");
                     return client.submit(request)
                             .flatMap(r -> {
-                                System.out.println("RatingsCommand.response" + r.getStatus());
                                 return r.getContent().map(sse -> {
-                                    System.out.println("RatingsCommand.content");
                                     String ratings = sse.contentAsString();
-                                    System.out.println("ratings = " + ratings);
                                     return Rating.fromJson(ratings);
                                 });
                             });

@@ -37,13 +37,11 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
 
     @Override
     protected Observable<Catalog> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId",
-                users));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> client.submit(request)
                         .flatMap(r -> r.getContent().map(sse -> {
                             String catalog = sse.contentAsString();
-                            System.out.println("catalog = " + catalog);
                             return Catalog.fromJson(catalog);
                         })));
     }

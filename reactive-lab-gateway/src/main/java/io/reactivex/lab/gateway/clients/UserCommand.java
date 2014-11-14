@@ -30,14 +30,12 @@ public class UserCommand extends HystrixObservableCommand<User> {
 
     @Override
     protected Observable<User> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId",
-                userIds));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> client.submit(request)
                         .flatMap(r -> r.getContent().map(
                                 sse -> {
                                     String user = sse.contentAsString();
-                                    System.out.println("user = " + user);
                                     return User.fromJson(user);
                                 })));
     }

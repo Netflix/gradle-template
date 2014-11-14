@@ -2,21 +2,16 @@ package io.reactivex.lab.gateway;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.lab.gateway.hystrix.HystrixMetricsStreamHandler;
 import io.reactivex.lab.gateway.loadbalancer.DiscoveryAndLoadBalancer;
-import io.reactivex.lab.gateway.loadbalancer.LoadBalancerFactory;
 import io.reactivex.lab.gateway.routes.RouteForDeviceHome;
 import io.reactivex.lab.gateway.routes.mock.TestRouteBasic;
 import io.reactivex.lab.gateway.routes.mock.TestRouteWithHystrix;
 import io.reactivex.lab.gateway.routes.mock.TestRouteWithSimpleFaultTolerance;
 import io.reactivex.netty.RxNetty;
-import io.reactivex.netty.pipeline.PipelineConfigurators;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
-
-import java.util.concurrent.TimeUnit;
-
 import rx.Observable;
-import rx.Subscriber;
 
 import com.netflix.hystrix.HystrixRequestLog;
 import com.netflix.hystrix.strategy.concurrency.HystrixRequestContext;
@@ -43,7 +38,10 @@ public class StartGatewayServer {
 
         // start web services => http://localhost:8080
         RxNetty.createHttpServer(8080, (request, response) -> {
-            System.out.println("Server => Request: " + request.getPath());
+            if (request.getPath().contains("favicon.ico")) {
+                return Observable.empty();
+            }
+            // System.out.println("Server => Request: " + request.getPath());
             return Observable.defer(() -> {
                 HystrixRequestContext.initializeContext();
                 try {
@@ -59,7 +57,7 @@ public class StartGatewayServer {
                 return writeError(request, response, "Failed: " + error.getMessage());
             }).doOnTerminate(() -> {
                 if (HystrixRequestContext.isCurrentThreadInitialized()) {
-                    System.out.println("Server => Hystrix Log [" + request.getPath() + "] => " + HystrixRequestLog.getCurrentRequest().getExecutedCommandsAsString());
+                    System.out.println("Server => Request [" + request.getPath() + "] => " + HystrixRequestLog.getCurrentRequest().getExecutedCommandsAsString());
                     HystrixRequestContext.getContextForCurrentThread().shutdown();
                 } else {
                     System.err.println("HystrixRequestContext not initialized for thread: " + Thread.currentThread());
@@ -87,43 +85,12 @@ public class StartGatewayServer {
     }
 
     private static void startHystrixMetricsStream() {
+        HystrixMetricsStreamHandler<ByteBuf, ByteBuf> hystrixMetricsStreamHandler = new HystrixMetricsStreamHandler<>("/", 1000);
         RxNetty.createHttpServer(9999, (request, response) -> {
             System.out.println("Server => Start Hystrix Stream at http://localhost:9999");
-            response.getHeaders().add("content-type", "text/event-stream");
-            return Observable.create((Subscriber<? super Void> s) -> {
-                s.add(streamPoller.subscribe(json -> {
-                    response.writeStringAndFlush("data: " + json);
-                }, error -> {
-                    s.onError(error);
-                }));
-
-                s.add(Observable.interval(1000, TimeUnit.MILLISECONDS).flatMap(n -> {
-                    return response.writeStringAndFlush("ping:")
-                            .onErrorReturn(e -> {
-                                System.out.println("Connection closed, unsubscribing from Hystrix Stream");
-                                s.unsubscribe();
-                                return null;
-                            });
-                }).subscribe());
-            });
-        }, PipelineConfigurators.<ByteBuf> serveSseConfigurator()).start();
+            return hystrixMetricsStreamHandler.handle(request, response);
+        }).start();
     }
-
-    final static Observable<String> streamPoller = Observable.create((Subscriber<? super String> s) -> {
-        //        try {
-        //            System.out.println("Server => Start Hystrix Metric Poller");
-        //            HystrixMetricsPoller poller = new HystrixMetricsPoller(json -> {
-        //                s.onNext(json);
-        //            }, 1000);
-        //            s.add(Subscriptions.create(() -> {
-        //                System.out.println("Server => Shutdown Hystrix Stream");
-        //                poller.shutdown();
-        //            }));
-        //            poller.start();
-        //        } catch (Exception e) {
-        //            s.onError(e);
-        //        }
-        }).publish().refCount();
 
     public static Observable<Void> writeError(HttpServerRequest<?> request, HttpServerResponse<ByteBuf> response, String message) {
         System.err.println("Server => Error [" + request.getPath() + "] => " + message);

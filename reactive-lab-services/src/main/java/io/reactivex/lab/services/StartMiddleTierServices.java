@@ -22,7 +22,7 @@ public class StartMiddleTierServices {
         System.setProperty("reactivelab.eureka.server.host", StartEurekaServer.EUREKA_SERVER_HOST);
         System.setProperty("reactivelab.eureka.server.read.port", String.valueOf(StartEurekaServer.EUREKA_SERVER_READ_PORT));
         System.setProperty("reactivelab.eureka.server.write.port", String.valueOf(StartEurekaServer.EUREKA_SERVER_WRITE_PORT));
-        System.setProperty("eureka2.heartbeat.intervalMillis", "1000"); // set lower for demo/playground purposes
+//        System.setProperty("eureka2.heartbeat.intervalMillis", "1000"); // set lower for demo/playground purposes
 
         /* Create a EurekaClient to be used by the services for registering for discovery */
         ServerResolver.Server discoveryServer = new ServerResolver.Server(StartEurekaServer.EUREKA_SERVER_HOST, StartEurekaServer.EUREKA_SERVER_READ_PORT);

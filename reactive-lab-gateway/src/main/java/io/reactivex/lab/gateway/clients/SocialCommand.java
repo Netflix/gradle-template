@@ -37,13 +37,11 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
 
     @Override
     protected Observable<Social> run() {
-        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId",
-                users));
+        HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .flatMap(client -> client.submit(request)
                         .flatMap(r -> r.getContent().map(sse -> {
                             String social = sse.contentAsString();
-                            System.out.println("social = " + social);
                             return Social.fromJson(social);
                         })));
     }
