@@ -39,7 +39,7 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
                                                                                                               videos));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
-                           .flatMap(client -> client.submit(request)
+                           .<VideoMetadata>flatMap(client -> client.submit(request)
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> VideoMetadata.fromJson(sse.contentAsString()))))
                            .retry(1);

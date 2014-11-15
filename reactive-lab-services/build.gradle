@@ -4,7 +4,9 @@ targetCompatibility = JavaVersion.VERSION_1_8
 dependencies {
     compile 'io.reactivex:rxnetty:0.4.0'
     compile 'io.reactivex:rxjava:1.0.0-rc.10'
-    compile "com.netflix.eureka2:eureka-write-server:2.0.0-DP2"
+    compile('com.netflix.eureka2:eureka-write-server:2.0.0-DP2') {
+        exclude group: 'com.netflix.rxnetty', module: 'rx-netty'
+    }
     compile "com.netflix.eureka2:eureka-client:2.0.0-DP2"
     compile "com.netflix.ocelli:ocelli-rxnetty:0.0.3"
     compile "com.netflix.ocelli:ocelli-eureka:0.0.3"

@@ -37,7 +37,7 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
-                           .flatMap(client -> client.submit(request)
+                           .<Rating>flatMap(client -> client.submit(request)
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> Rating.fromJson(sse.contentAsString()))))
                            .retry(1);

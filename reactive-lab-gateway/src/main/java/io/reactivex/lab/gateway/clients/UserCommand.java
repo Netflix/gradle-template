@@ -30,7 +30,7 @@ public class UserCommand extends HystrixObservableCommand<User> {
     protected Observable<User> run() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds));
         return loadBalancer.choose().map(holder -> holder.getClient())
-                .flatMap(client -> client.submit(request)
+                .<User>flatMap(client -> client.submit(request)
                                          .flatMap(r -> r.getContent().map(
                                                  (ServerSentEvent sse) -> {
                                                      String user = sse.contentAsString();

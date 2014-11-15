@@ -37,7 +37,7 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
     protected Observable<Social> run() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose().map(holder -> holder.getClient())
-                .flatMap(client -> client.submit(request)
+                .<Social>flatMap(client -> client.submit(request)
                                          .flatMap(r -> r.getContent().map((ServerSentEvent sse) -> {
                                              String social = sse.contentAsString();
                                              return Social.fromJson(social);

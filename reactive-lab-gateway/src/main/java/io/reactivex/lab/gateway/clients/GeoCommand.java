@@ -31,7 +31,7 @@ public class GeoCommand extends HystrixObservableCommand<GeoIP> {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/geo?" + UrlGenerator.generate("ip", ips));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
-                           .flatMap(client -> client.submit(request)
+                           .<GeoIP>flatMap(client -> client.submit(request)
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> GeoIP.fromJson(sse.contentAsString()))))
                            .retry(1);

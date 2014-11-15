@@ -38,7 +38,7 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
-                           .flatMap(client -> client.submit(request)
+                           .<Catalog>flatMap(client -> client.submit(request)
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> Catalog.fromJson(sse.contentAsString()))))
                            .retry(1);

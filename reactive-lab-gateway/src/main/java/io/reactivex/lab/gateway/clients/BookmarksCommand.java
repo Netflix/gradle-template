@@ -39,7 +39,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
                 .map(holder -> holder.getClient())
-                .flatMap(client -> client.submit(request)
+                .<Bookmark>flatMap(client -> client.submit(request)
                                          .flatMap(r -> r.getContent().map((ServerSentEvent sse) -> Bookmark.fromJson(sse.contentAsString()))))
                 .retry(1);
     }
