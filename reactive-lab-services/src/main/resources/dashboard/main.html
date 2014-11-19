@@ -22,7 +22,7 @@
   <script src="http://d3js.org/d3.v3.js"></script>
 </head>
 <body>
-<h1>Streaming Eureka Registry</h1>
+<h1>Eureka Registry</h1>
 
 <script type="text/javascript">
   var source = new EventSource("http://localhost:8888/data");
@@ -32,8 +32,13 @@
   };
 
   source.onmessage = function (event) {
-    console.log("event.data");
+    var instInfo = JSON.parse(event.data);
     console.log(event.data);
+    if (instInfo.vip && instInfo.type === 'Add') {
+      addInstance(instInfo);
+    } else if (instInfo.vip && instInfo.type === 'Delete') {
+      removeInstance(instInfo);
+    }
   };
 
   source.onerror = function (err) {
@@ -46,8 +51,8 @@
 
 <script type="text/javascript">
 var margin = { top: 50, right: 0, bottom: 100, left: 250 },
-    width = 960 - margin.left - margin.right,
-    height = 430 - margin.top - margin.bottom,
+    width = 1420 - margin.left - margin.right,
+    height = 840 - margin.top - margin.bottom,
     gridSize = 20;
 var statusList = ['STARTING', 'UP', 'OUT_OF_SERVICE', 'DOWN', 'UNKNOWN'];
 var instIdToDataObj = {};
@@ -59,7 +64,7 @@ var timerItr = 0, timerMaxItr = 10;
 var heatMap;
 
 // main
-makeData();
+//makeData();
 
 function getAppIndex(appId) {
   if (appId in appIndexMap) {
@@ -106,23 +111,28 @@ function makeRandomInstanceInfo() {
   return { port: port, 'instance-id': instanceId, 'type': 'Add', vip: serviceName, status: status };
 }
 
-function makeNewInstance() {
+function makeNewRandomInstance() {
   var instInfo = makeRandomInstanceInfo();
   var appInstCount = getAppInstanceCount(instInfo.vip);
-
   instInfo.day = getAppIndex(instInfo.vip);
   instInfo.hour = (appInstCount + 1);
-  instInfo.value = getRandomInt(1, 100);
-
   appInstanceCountMap[instInfo.vip] = appInstCount + 1;
+  instIdToDataObj[instInfo['instance-id']] = instInfo;
+  return instInfo;
+}
 
+function makeNewInstance(instInfo) {
+  var appInstCount = getAppInstanceCount(instInfo.vip);
+  instInfo.day = getAppIndex(instInfo.vip);
+  instInfo.hour = (appInstCount + 1);
+  appInstanceCountMap[instInfo.vip] = (appInstCount + 1);
   instIdToDataObj[instInfo['instance-id']] = instInfo;
   return instInfo;
 }
 
 function makeData() {
   timerId = window.setInterval(function () {
-    regData.push(makeNewInstance());
+    regData.push(makeNewRandomInstance());
     if (heatMap) {
       heatMap.update(regData);
     } else {
@@ -132,8 +142,28 @@ function makeData() {
   }, 2000);
 }
 
+function addInstance(instInfo) {
+  var newInstInfo = makeNewInstance(instInfo);
+  regData.push(newInstInfo);
+  if (heatMap) {
+    heatMap.update(regData);
+  } else {
+    heatMap = HeatMap(regData);
+    heatMap.render();
+  }
+}
+
+function removeInstance(instInfo) {
+  if (heatMap) {
+    var instToRemove = instIdToDataObj[instInfo['instance-id']];
+    removeDataPoint(instToRemove);
+    heatMap.update(regData);
+    delete instIdToDataObj[instInfo['instance-id']];
+  }
+}
+
 // randomly delete an instance
-function removeInstance() {
+function removeInstanceRandom() {
   var totalInstances = Object.keys(instIdToDataObj).length;
   var randIndex = getRandomInt(0, (totalInstances - 1));
 
@@ -141,31 +171,9 @@ function removeInstance() {
   var dataToDelete = instIdToDataObj[instKey];
 
   removeDataPoint(dataToDelete);
-
-  //regData.splice(regData.indexOf(dataToDelete), 1);
   heatMap.update(regData);
   delete instIdToDataObj[instKey]
 }
-
-function timerLoop() {
-  timerId = window.setInterval(function () {
-    if (timerItr > timerMaxItr) {
-      return;
-    }
-
-    timerItr = timerItr + 1;
-
-    var randNum = getRandomInt(1, 2);
-    if (randNum == 1) {
-      console.log("Removing instance");
-      removeInstance();
-    } else {
-      console.log("Adding instance");
-      //addInstance();
-    }
-  }, 2000);
-}
-
 
 function removeDataPoint(dp) {
   var appId = dp.day;
@@ -176,6 +184,7 @@ function removeDataPoint(dp) {
       instInfo.hour = instInfo.hour - 1;
     }
   }
+  appInstanceCountMap[dp.vip] = appInstanceCountMap[dp.vip] - 1;
   regData.splice(regData.indexOf(dp), 1);
 }
 
@@ -196,10 +205,11 @@ function HeatMap(data) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     updateAll(data);
+    buildLegend();
   }
 
   function keyFn(d) {
-    return d.day + '-' + d.hour + '-' + d.value;
+    return d.day + '-' + d.hour + '-' + d['instance-id'] + '-' + d.vip;
   }
 
   function updateAll(data) {
@@ -243,7 +253,7 @@ function HeatMap(data) {
           return colorScale(d.status);
         })
         .append('title').text(function (d) {
-          return d.vip + "-" + d.status;
+          return d['instance-id'] + ":" + d.port;
         });
 
     // on update
@@ -255,6 +265,43 @@ function HeatMap(data) {
 
   }
 
+  function buildLegend() {
+    var legendCont = svg.append('g').attr("transform", "translate(10, 600)");
+    legendCont.append('text')
+        .attr('x', 5)
+        .attr('y', -10)
+        .style('stroke-width', 4)
+        .text('Instance Status Legend');
+
+    var legend = legendCont.selectAll('g.legendEntry')
+        .data(statusList)
+        .enter()
+        .append('g').attr('class', 'legendEntry');
+
+    legend.append('rect')
+        .attr("x", 10)
+        .attr("y", function (d, i) {
+          return i * 20;
+        })
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("fill", function (d) {
+          return colorScale(d);
+        });
+
+    legend.append('text')
+        .attr("x", 25) //leave 5 pixel space after the <rect>
+        .attr("y", function (d, i) {
+          return i * 20;
+        })
+        .attr("dy", "0.65em") //place text one line *below* the x,y point
+        .text(function (d, i) {
+          return d;
+        });
+  }
+
   return {
     render: render,
     update: updateAll
@@ -262,6 +309,7 @@ function HeatMap(data) {
 }
 
 </script>
+
 
 </body>
 </html>
