@@ -41,7 +41,7 @@ public class StartEurekaServer {
         /* configure read/write Eureka server */
         System.setProperty("eureka2.eviction.allowedPercentage", "100"); // turn off eviction protection so during demos we don't hold on to hosts
         System.setProperty("eureka2.eviction.timeoutMillis", "4000"); // set far lower than normal for demo/playground purposes
-        System.setProperty("eureka2.heartbeat.intervalMillis", "3000"); // set lower for demo/playground purposes
+        System.setProperty("eureka2.registration.heartbeat.intervalMillis", "3000"); // set lower for demo/playground purposes
         WriteServerConfig.WriteServerConfigBuilder builder = new WriteServerConfig.WriteServerConfigBuilder();
         builder.withReadServerPort(EUREKA_SERVER_READ_PORT).withWriteServerPort(EUREKA_SERVER_WRITE_PORT)
                 .withWriteClusterAddresses(new String[] { EUREKA_SERVER_HOST })
