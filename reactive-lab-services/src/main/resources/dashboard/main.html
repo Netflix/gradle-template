@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    rect.bordered {
+      stroke: #E6E6E6;
+      stroke-width: 2px;
+    }
+
+    text.mono {
+      font-size: 9pt;
+      font-family: Consolas, courier;
+      fill: #aaa;
+    }
+
+    text.appLabel {
+      fill: #000;
+    }
+  </style>
+  <script src="http://d3js.org/d3.v3.js"></script>
+</head>
+<body>
+<h1>Eureka Registry</h1>
+
+<script type="text/javascript">
+  var source = new EventSource("http://localhost:8888/data");
+
+  source.onopen = function () {
+    console.log("SSE connection opened");
+  };
+
+  source.onmessage = function (event) {
+    var instInfo = JSON.parse(event.data);
+    console.log(event.data);
+    if (instInfo.vip && instInfo.type === 'Add') {
+      addInstance(instInfo);
+    } else if (instInfo.vip && instInfo.type === 'Delete') {
+      removeInstance(instInfo);
+    }
+  };
+
+  source.onerror = function (err) {
+    console.log("Error streaming eureka registry");
+    console.log(err);
+  };
+</script>
+
+<div id="chart"></div>
+
+<script type="text/javascript">
+var margin = { top: 50, right: 0, bottom: 100, left: 250 },
+    width = 1420 - margin.left - margin.right,
+    height = 840 - margin.top - margin.bottom,
+    gridSize = 20;
+var statusList = ['STARTING', 'UP', 'OUT_OF_SERVICE', 'DOWN', 'UNKNOWN'];
+var instIdToDataObj = {};
+var curAppIndex = 0;
+var appInstanceCountMap = {};
+var appIndexMap = {};
+var regData = [];
+var timerItr = 0, timerMaxItr = 10;
+var heatMap;
+
+// main
+//makeData();
+
+function getAppIndex(appId) {
+  if (appId in appIndexMap) {
+    return appIndexMap[appId];
+  }
+  curAppIndex = curAppIndex + 1;
+  appIndexMap[appId] = curAppIndex;
+  return curAppIndex;
+}
+
+function getAppInstanceCount(appId) {
+  if (appId in appInstanceCountMap) {
+    return appInstanceCountMap[appId];
+  }
+  return 0;
+}
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getRandInt() {
+  return Math.floor(Math.random() * 100);
+}
+
+function makeRandomInstanceId() {
+  return 'inst-' + getRandInt();
+}
+
+function makeRandomServiceName() {
+  return 'reactive-lab-service-' + getRandomInt(1, 5);
+}
+
+function makeRandomStatus() {
+  return statusList[getRandomInt(0, 4)];
+}
+
+//{"port":"9905","instance-id":"lgml-ajoshi-9905","type":"Add","vip":"reactive-lab-social-service","status":"UP"}
+function makeRandomInstanceInfo() {
+  var port = getRandomInt(8000, 9000);
+  var instanceId = makeRandomInstanceId();
+  var status = makeRandomStatus();
+  var serviceName = makeRandomServiceName();
+  return { port: port, 'instance-id': instanceId, 'type': 'Add', vip: serviceName, status: status };
+}
+
+function makeNewRandomInstance() {
+  var instInfo = makeRandomInstanceInfo();
+  var appInstCount = getAppInstanceCount(instInfo.vip);
+  instInfo.day = getAppIndex(instInfo.vip);
+  instInfo.hour = (appInstCount + 1);
+  appInstanceCountMap[instInfo.vip] = appInstCount + 1;
+  instIdToDataObj[instInfo['instance-id']] = instInfo;
+  return instInfo;
+}
+
+function makeNewInstance(instInfo) {
+  var appInstCount = getAppInstanceCount(instInfo.vip);
+  instInfo.day = getAppIndex(instInfo.vip);
+  instInfo.hour = (appInstCount + 1);
+  appInstanceCountMap[instInfo.vip] = (appInstCount + 1);
+  instIdToDataObj[instInfo['instance-id']] = instInfo;
+  return instInfo;
+}
+
+function makeData() {
+  timerId = window.setInterval(function () {
+    regData.push(makeNewRandomInstance());
+    if (heatMap) {
+      heatMap.update(regData);
+    } else {
+      heatMap = HeatMap(regData);
+      heatMap.render();
+    }
+  }, 2000);
+}
+
+function addInstance(instInfo) {
+  var newInstInfo = makeNewInstance(instInfo);
+  regData.push(newInstInfo);
+  if (heatMap) {
+    heatMap.update(regData);
+  } else {
+    heatMap = HeatMap(regData);
+    heatMap.render();
+  }
+}
+
+function removeInstance(instInfo) {
+  if (heatMap) {
+    var instToRemove = instIdToDataObj[instInfo['instance-id']];
+    removeDataPoint(instToRemove);
+    heatMap.update(regData);
+    delete instIdToDataObj[instInfo['instance-id']];
+  }
+}
+
+// randomly delete an instance
+function removeInstanceRandom() {
+  var totalInstances = Object.keys(instIdToDataObj).length;
+  var randIndex = getRandomInt(0, (totalInstances - 1));
+
+  var instKey = Object.keys(instIdToDataObj)[randIndex];
+  var dataToDelete = instIdToDataObj[instKey];
+
+  removeDataPoint(dataToDelete);
+  heatMap.update(regData);
+  delete instIdToDataObj[instKey]
+}
+
+function removeDataPoint(dp) {
+  var appId = dp.day;
+  var deleteIndex = regData.indexOf(dp);
+  for (var i = deleteIndex + 1; i < regData.length; i++) {
+    var instInfo = regData[i];
+    if (instInfo.day == appId) {
+      instInfo.hour = instInfo.hour - 1;
+    }
+  }
+  appInstanceCountMap[dp.vip] = appInstanceCountMap[dp.vip] - 1;
+  regData.splice(regData.indexOf(dp), 1);
+}
+
+function clearChart() {
+  d3.select('#chart svg').remove()
+}
+
+function HeatMap(data) {
+  var colorScale = d3.scale.ordinal().domain(statusList).range(['yellow', 'green', 'orange', 'red', 'black']);
+  var svg, heatMap;
+
+  function render() {
+    clearChart();
+    svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    updateAll(data);
+    buildLegend();
+  }
+
+  function keyFn(d) {
+    return d.day + '-' + d.hour + '-' + d['instance-id'] + '-' + d.vip;
+  }
+
+  function updateAll(data) {
+    updateAppLabels(data);
+    updateData(data);
+  }
+
+  function updateAppLabels(data) {
+    var appLabels = svg.selectAll(".appLabel").data(data, function (d) {
+      return d.vip;
+    });
+
+    appLabels.enter().append("text")
+        .text(function (d) {
+          return d.vip;
+        })
+        .attr("x", 0)
+        .attr("y", function (d, i) {
+          return (getAppIndex(d.vip) - 1) * 2 * gridSize;
+        })
+        .style("text-anchor", "end")
+        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+        .attr("class", function (d, i) {
+          return "mono appLabel";
+        });
+  }
+
+  function updateData(data) {
+    heatMap = svg.selectAll(".hour").data(data, keyFn);
+    heatMap.enter().append("rect")
+        .attr("x", function (d) {
+          return (d.hour - 1) * gridSize;
+        })
+        .attr("y", function (d) {
+          return (d.day - 1) * 2 * gridSize;
+        })
+        .attr("class", "hour bordered")
+        .attr("width", 15)
+        .attr("height", 2 * gridSize)
+        .style("fill", function (d) {
+          return colorScale(d.status);
+        })
+        .append('title').text(function (d) {
+          return d['instance-id'] + ":" + d.port;
+        });
+
+    // on update
+    heatMap.transition().attr('x', function (d) {
+      return (d.hour - 1) * gridSize;
+    });
+
+    heatMap.exit().remove();
+
+  }
+
+  function buildLegend() {
+    var legendCont = svg.append('g').attr("transform", "translate(10, 600)");
+    legendCont.append('text')
+        .attr('x', 5)
+        .attr('y', -10)
+        .style('stroke-width', 4)
+        .text('Instance Status Legend');
+
+    var legend = legendCont.selectAll('g.legendEntry')
+        .data(statusList)
+        .enter()
+        .append('g').attr('class', 'legendEntry');
+
+    legend.append('rect')
+        .attr("x", 10)
+        .attr("y", function (d, i) {
+          return i * 20;
+        })
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("stroke", "black")
+        .style("stroke-width", 1)
+        .style("fill", function (d) {
+          return colorScale(d);
+        });
+
+    legend.append('text')
+        .attr("x", 25) //leave 5 pixel space after the <rect>
+        .attr("y", function (d, i) {
+          return i * 20;
+        })
+        .attr("dy", "0.65em") //place text one line *below* the x,y point
+        .text(function (d, i) {
+          return d;
+        });
+  }
+
+  return {
+    render: render,
+    update: updateAll
+  }
+}
+
+</script>
+
+
+</body>
+</html>
+
