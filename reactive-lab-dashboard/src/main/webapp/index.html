@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Hystrix Dashboard</title>
+
+	<!-- Javascript to monitor and display -->
+	<script src="./js/jquery.min.js" type="text/javascript"></script>
+	
+	<script>
+		function sendToMonitor() {
+			
+			if($('#stream').val().length > 0) {
+				var url = "./monitor/monitor.html?stream=" + encodeURIComponent($('#stream').val()) + "";
+				location.href= url;
+			} else {
+				$('#message').html("The 'stream' value is required.");
+			}
+		}
+	</script>
+</head>
+<body>
+<div style="width:800px;margin:0 auto;">
+	
+	<center>
+	<h2>ReactiveLab Hystrix Dashboard</h2>
+	<input id="stream" type="textfield" size="120" placeholder="http://127.0.0.1:9999/hystrix.stream" value="http://127.0.0.1:9999/hystrix.stream"></input>
+	<br>
+	<button onclick="sendToMonitor()">Monitor Stream</button>
+	<br><br>
+	<div id="message" style="color:red"></div>
+	
+	</center>
+</div>
+</body>
+</html>

@@ -1,2 +1,2 @@
 rootProject.name='ReactiveLab'
-include 'reactive-lab-services', 'reactive-lab-gateway', 'reactive-lab-tutorial'
+include 'reactive-lab-services', 'reactive-lab-gateway', 'reactive-lab-tutorial', 'reactive-lab-dashboard'
