@@ -94,7 +94,7 @@ public final class JsonMapper {
         json.writeNumberField("propertyValue_executionIsolationSemaphoreMaxConcurrentRequests", 0);
         json.writeNumberField("propertyValue_fallbackIsolationSemaphoreMaxConcurrentRequests", 0);
 
-        json.writeNumberField("propertyValue_metricsRollingStatisticalWindowInMilliseconds", 10);
+        json.writeNumberField("propertyValue_metricsRollingStatisticalWindowInMilliseconds", 10000);
 
         json.writeBooleanField("propertyValue_requestCacheEnabled", false);
         json.writeBooleanField("propertyValue_requestLogEnabled", false);

@@ -1,6 +1,7 @@
 package io.reactivex.lab.services.impls;
 
 import com.netflix.eureka2.client.EurekaClient;
+
 import io.reactivex.lab.services.MiddleTierService;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
@@ -33,6 +34,6 @@ public class UserService extends MiddleTierService {
             return user;
         }).flatMap(user -> response.writeStringAndFlush("data: " + SimpleJson.mapToJson(user) + "\n")
                 .doOnCompleted(response::close))
-                .delay(((long) (Math.random() * 20) + 1500), TimeUnit.MILLISECONDS); // simulate latency
+                .delay(((long) (Math.random() * 500) + 500), TimeUnit.MILLISECONDS); // simulate latency
     }
 }

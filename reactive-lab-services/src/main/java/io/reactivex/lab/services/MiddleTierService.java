@@ -47,6 +47,7 @@ public abstract class MiddleTierService {
             try {
                 long startTime = System.currentTimeMillis();
                 return handleRequest(request, response)
+                        .doOnCompleted(() -> System.out.println("Response => " + request.getPath() + " Time => " + (int) (System.currentTimeMillis() - startTime) + "ms"))
                         .doOnCompleted(() -> metrics.getRollingPercentile().addValue((int) (System.currentTimeMillis() - startTime)))
                         .doOnCompleted(() -> metrics.getRollingNumber().add(Metrics.EventType.SUCCESS, 1))
                         .doOnError(t -> metrics.getRollingNumber().add(Metrics.EventType.FAILURE, 1));
@@ -104,7 +105,7 @@ public abstract class MiddleTierService {
 
         return new InstanceInfo.Builder()
                 .withId(hostName + "-" + port)
-                .withApp("mock_service")
+                .withApp("reactive-lab")
                 .withStatus(InstanceInfo.Status.UP)
                 .withVipAddress(eurekaVipAddress)
                 .withPorts(ports)

@@ -1,17 +1,17 @@
 package io.reactivex.lab.services;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.netflix.eureka2.registry.InstanceInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.RxNetty;
 import io.reactivex.netty.protocol.http.server.file.ClassPathFileRequestHandler;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import rx.Observable;
 import rx.schedulers.Schedulers;
 

@@ -52,7 +52,7 @@ public class HystrixMetricsStreamHandler<I, O> implements RequestHandler<I, O> {
 
     @Override
     public Observable<Void> handle(HttpServerRequest<I> request, HttpServerResponse<O> response) {
-        if (request.getPath().startsWith(hystrixPrefix)) {
+        if (request.getPath().endsWith(hystrixPrefix)) {
             return handleHystrixRequest(response);
         }
         return appHandler.handle(request, response);
