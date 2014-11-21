@@ -1,7 +1,7 @@
 package io.reactivex.lab.services.impls;
 
 import com.netflix.eureka2.client.EurekaClient;
-import io.reactivex.lab.services.MiddleTierService;
+
 import io.reactivex.lab.services.common.Random;
 import io.reactivex.lab.services.common.SimpleJson;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class BookmarksService extends MiddleTierService {
+public class BookmarksService extends AbstractMiddleTierService {
 
     public BookmarksService(EurekaClient client) {
         super("reactive-lab-bookmark-service", client);

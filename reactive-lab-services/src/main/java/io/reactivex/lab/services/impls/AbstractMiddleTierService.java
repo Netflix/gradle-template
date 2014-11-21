@@ -1,4 +1,4 @@
-package io.reactivex.lab.services;
+package io.reactivex.lab.services.impls;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -25,14 +25,17 @@ import com.netflix.eureka2.registry.InstanceInfo;
 import com.netflix.eureka2.registry.ServicePort;
 import com.netflix.eureka2.registry.datacenter.BasicDataCenterInfo;
 
-public abstract class MiddleTierService {
+/**
+ * Common base for the service impls
+ */
+public abstract class AbstractMiddleTierService {
 
     private EurekaClient client;
     private HttpServer<ByteBuf, ServerSentEvent> server;
     protected final String eurekaVipAddress;
     private final Metrics metrics;
 
-    protected MiddleTierService(String eurekaVipAddress, EurekaClient client) {
+    protected AbstractMiddleTierService(String eurekaVipAddress, EurekaClient client) {
         this.eurekaVipAddress = eurekaVipAddress;
         this.client = client;
         this.metrics = new Metrics(eurekaVipAddress);
