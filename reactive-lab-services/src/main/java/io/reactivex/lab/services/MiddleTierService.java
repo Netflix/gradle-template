@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import rx.Observable;
 
@@ -96,15 +97,16 @@ public abstract class MiddleTierService {
     protected InstanceInfo createInstanceInfo(int port) {
         final HashSet<ServicePort> ports = new HashSet<>(Arrays.asList(new ServicePort(port, false)));
 
-        String hostName = "unknown";
+        String hostAddress = "unknown";
         try {
-            hostName = InetAddress.getLocalHost().getHostName();
+            hostAddress = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
+            hostAddress = "unknown-" + UUID.randomUUID();
         }
 
         return new InstanceInfo.Builder()
-                .withId(hostName + "-" + port)
+                .withId(hostAddress + "-" + port)
                 .withApp("reactive-lab")
                 .withStatus(InstanceInfo.Status.UP)
                 .withVipAddress(eurekaVipAddress)

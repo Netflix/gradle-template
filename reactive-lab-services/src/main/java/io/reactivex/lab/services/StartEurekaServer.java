@@ -65,6 +65,7 @@ public class StartEurekaServer {
                         app = "none";
                     }
                     String name = n.getData().getDataCenterInfo().getName();
+                    String id = n.getData().getId();
 
                     String ipAddress = n.getData().getDataCenterInfo()
                             .getAddresses().stream()
@@ -73,7 +74,7 @@ public class StartEurekaServer {
                     HashSet<ServicePort> servicePorts = n.getData().getPorts();
                     int port = servicePorts.iterator().next().getPort();
 
-                    System.out.println("Eureka => " + n.getKind() + " => App: " + app + " VIP: " + vip + " Name: " + name + " IP: " + ipAddress + " Port: " + port);
+                    System.out.println("Eureka => " + n.getKind() + " => App: " + app + " VIP: " + vip + " Name: " + name + " IP: " + ipAddress + " Port: " + port + " ID: " + id);
                 });
 
         startEurekaDashboard(8888, client);
