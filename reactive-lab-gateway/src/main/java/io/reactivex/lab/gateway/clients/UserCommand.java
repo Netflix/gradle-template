@@ -2,6 +2,7 @@ package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
 import io.reactivex.lab.gateway.common.SimpleJson;
@@ -12,6 +13,7 @@ import netflix.ocelli.LoadBalancer;
 import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,18 @@ public class UserCommand extends HystrixObservableCommand<User> {
                                                  })))
                 .retry(1);
     }
+    
+    @Override
+    protected Observable<User> getFallback() {
+        return Observable.from(userIds).map(id -> {
+            Map<String, Object> fallback = new HashMap<>();
+            fallback.put("userId", id);
+            fallback.put("name", "Fallback Name Here");
+            fallback.put("other_data", "goes_here");
+            User u = new User(fallback);
+            return u;
+        });
+    }
 
     public static class User implements ID {
         private final Map<String, Object> data;
@@ -47,7 +61,17 @@ public class UserCommand extends HystrixObservableCommand<User> {
         }
 
         public static User fromJson(String json) {
-            return new User(SimpleJson.jsonToMap(json));
+            Map<String, Object> data = SimpleJson.jsonToMap(json);
+            if (!data.containsKey("userId")) {
+                throw new IllegalArgumentException("A User object requires a 'userId'");
+            } else {
+                try {
+                    int id = Integer.parseInt(String.valueOf(data.get("userId")));
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("The `userId` must be an Integer");
+                }
+            }
+            return new User(data);
         }
 
         public int getId() {

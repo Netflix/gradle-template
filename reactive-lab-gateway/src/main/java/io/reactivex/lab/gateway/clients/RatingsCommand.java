@@ -2,6 +2,7 @@ package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.RatingsCommand.Rating;
@@ -14,6 +15,7 @@ import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +45,16 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
                            .retry(1);
     }
 
+    @Override
+    protected Observable<Rating> getFallback() {
+        Map<String, Object> video = new HashMap<>();
+        video.put("videoId", videos.get(0).getId());
+        video.put("estimated_user_rating", 3.5);
+        video.put("actual_user_rating", 4);
+        video.put("average_user_rating", 3.1);
+        return Observable.just(new Rating(video));
+    }
+    
     public static class Rating {
 
         private final Map<String, Object> data;

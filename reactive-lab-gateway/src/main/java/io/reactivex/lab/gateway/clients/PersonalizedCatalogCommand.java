@@ -2,6 +2,7 @@ package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Catalog;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
@@ -14,6 +15,7 @@ import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +44,24 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> Catalog.fromJson(sse.contentAsString()))))
                            .retry(1);
+    }
+    
+    @Override
+    protected Observable<Catalog> getFallback() {
+        return Observable.from(users).<Catalog>map(u -> {
+            try {
+                Map<String, Object> userData = new HashMap<>();
+                userData.put("userId", u.getId());
+
+                userData.put("list_title", "Really quirky and over detailed list title!");
+                userData.put("other_data", "goes_here");
+                userData.put("videos", Arrays.asList(12345, 23456, 34567, 45678, 56789, 67890));
+                return new Catalog(userData);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public static class Catalog {

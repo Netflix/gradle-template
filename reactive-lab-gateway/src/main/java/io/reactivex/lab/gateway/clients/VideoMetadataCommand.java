@@ -2,6 +2,7 @@ package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.PersonalizedCatalogCommand.Video;
 import io.reactivex.lab.gateway.clients.VideoMetadataCommand.VideoMetadata;
@@ -14,6 +15,7 @@ import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +45,15 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
                                                     .flatMap(r -> r.getContent()
                                                                    .map((ServerSentEvent sse) -> VideoMetadata.fromJson(sse.contentAsString()))))
                            .retry(1);
+    }
+    
+    @Override
+    protected Observable<VideoMetadata> getFallback() {
+        Map<String, Object> video = new HashMap<>();
+        video.put("videoId", videos.get(0).getId());
+        video.put("title", "Fallback Video Title");
+        video.put("other_data", "goes_here");
+        return Observable.just(new VideoMetadata(video));
     }
 
     public static class VideoMetadata {

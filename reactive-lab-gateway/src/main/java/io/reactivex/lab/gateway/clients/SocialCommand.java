@@ -2,6 +2,7 @@ package io.reactivex.lab.gateway.clients;
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+
 import io.netty.buffer.ByteBuf;
 import io.reactivex.lab.gateway.clients.SocialCommand.Social;
 import io.reactivex.lab.gateway.clients.UserCommand.User;
@@ -14,6 +15,8 @@ import netflix.ocelli.rxnetty.HttpClientHolder;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +46,19 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
                                              return Social.fromJson(social);
                                          })))
                 .retry(1);
+    }
+    
+    @Override
+    protected Observable<Social> getFallback() {
+        Map<String, Object> user = new HashMap<>();
+        user.put("userId", users.get(0).getId());
+        user.put("friends", Collections.emptyList());
+        
+        return Observable.just(new Social(user));
+    }
+    
+    private static int randomUser() {
+        return ((int) (Math.random() * 10000));
     }
 
     public static class Social {
