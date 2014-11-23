@@ -32,5 +32,8 @@ subprojects {
 task startServices() {}
 startServices.dependsOn(":reactive-lab-services:start")
 
-task startEdge() {}
-startEdge.dependsOn(":reactive-lab-edge:start")
+task startGateway() {}
+startGateway.dependsOn(":reactive-lab-gateway:start")
+
+task startDiscovery() {}
+startDiscovery.dependsOn(":reactive-lab-gateway:startDiscovery")
