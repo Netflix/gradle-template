@@ -28,12 +28,11 @@ subprojects {
     group = "io.reactivex.lab"
 }
 
+task startDiscovery() {}
+startDiscovery.dependsOn(":reactive-lab-services:startDiscovery")
 
 task startServices() {}
-startServices.dependsOn(":reactive-lab-services:start")
+startServices.dependsOn(":reactive-lab-services:startServices")
 
 task startGateway() {}
 startGateway.dependsOn(":reactive-lab-gateway:start")
-
-task startDiscovery() {}
-startDiscovery.dependsOn(":reactive-lab-gateway:startDiscovery")
