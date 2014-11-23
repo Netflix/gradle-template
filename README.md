@@ -2,15 +2,21 @@
 
 Experiments and prototypes with reactive application design using service-oriented architecture concepts.
 
-### [Edge](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-edge)
+### [Discovery](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-services)
 
-
-Start server using [EdgeServer.java](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/EdgeServer.java) or Gradle:
+Start discovery server using [StartEurekaServer.java](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-services/src/main/java/io/reactivex/lab/services/StartEurekaServer.java)
 
 ```
-./gradlew startEdge
+./gradlew startDiscovery
 ```
 
+### [Gateway](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-gateway)
+
+Start gateway server using [StartGatewayServer.java](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/StartGatewayServer.java) or Gradle:
+
+```
+./gradlew startGateway
+```
 
 ### [Services](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-services)
 
@@ -26,7 +32,7 @@ Start several services on different ports using [StartMiddleTierServices.java](h
 
 ### Server
 
-See how Netty and RxJava are used as an HTTP server in [EdgeServer](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/EdgeServer.java#L44)
+See how Netty and RxJava are used as an HTTP server in [GatewayServer](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/StartGatewayServer.java#L40)
 
 Basics are:
 
@@ -39,7 +45,7 @@ Basics are:
 
 ### Client
 
-Clients using Netty and RxJava can be seen in the [clients](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients) package. 
+Clients using Netty and RxJava can be seen in the [clients](https://github.com/benjchristensen/ReactiveLab/tree/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/clients) package. 
 
 Basic example:
 
@@ -50,14 +56,14 @@ Basic example:
 
 ### Hystrix
 
-Here is a batch request using SSE inside a `HystrixObservableCommand` for fault-tolerance: [BookmarksCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients/BookmarksCommand.java).
+Here is a batch request using SSE inside a `HystrixObservableCommand` for fault-tolerance: [BookmarksCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/clients/BookmarksCommand.java).
 
-A `HystrixObservableCollapser` can be put in front of that command to allow automated batching: [BookmarkCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/clients/BookmarkCommand.java).
+A `HystrixObservableCollapser` can be put in front of that command to allow automated batching: [BookmarkCommand](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/clients/BookmarkCommand.java).
 
 
 ### Composition
 
-Nested, parallel execution of network requests can be composed using RxJava and Hystrix as demonstrated in [RouteForDeviceHome](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-edge/src/main/java/io/reactivex/lab/edge/routes/RouteForDeviceHome.java#L44) which is the example running at the `/device/home` endpoint.
+Nested, parallel execution of network requests can be composed using RxJava and Hystrix as demonstrated in [RouteForDeviceHome](https://github.com/benjchristensen/ReactiveLab/blob/master/reactive-lab-gateway/src/main/java/io/reactivex/lab/gateway/routes/RouteForDeviceHome.java) which is the example running at the `/device/home` endpoint.
 
 Here is a portion of the code to show the composition:
 
