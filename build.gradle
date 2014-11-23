@@ -35,4 +35,4 @@ task startServices() {}
 startServices.dependsOn(":reactive-lab-services:startServices")
 
 task startGateway() {}
-startGateway.dependsOn(":reactive-lab-gateway:start")
+startGateway.dependsOn(":reactive-lab-gateway:startGateway")
