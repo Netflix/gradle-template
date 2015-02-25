@@ -35,7 +35,7 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
     }
 
     @Override
-    protected Observable<Rating> run() {
+    protected Observable<Rating> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/ratings?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
@@ -46,7 +46,7 @@ public class RatingsCommand extends HystrixObservableCommand<Rating> {
     }
 
     @Override
-    protected Observable<Rating> getFallback() {
+    protected Observable<Rating> resumeWithFallback() {
         Map<String, Object> video = new HashMap<>();
         video.put("videoId", videos.get(0).getId());
         video.put("estimated_user_rating", 3.5);

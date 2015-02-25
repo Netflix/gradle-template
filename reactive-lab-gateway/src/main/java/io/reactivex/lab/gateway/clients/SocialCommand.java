@@ -37,7 +37,7 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
     }
 
     @Override
-    protected Observable<Social> run() {
+    protected Observable<Social> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/social?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .<Social>flatMap(client -> client.submit(request)
@@ -49,7 +49,7 @@ public class SocialCommand extends HystrixObservableCommand<Social> {
     }
     
     @Override
-    protected Observable<Social> getFallback() {
+    protected Observable<Social> resumeWithFallback() {
         Map<String, Object> user = new HashMap<>();
         user.put("userId", users.get(0).getId());
         user.put("friends", Collections.emptyList());

@@ -82,7 +82,7 @@ public class ClientServerWithResiliencePatterns {
         }
 
         @Override
-        protected Observable<String> run() {
+        protected Observable<String> construct() {
             return ClientServerWithLoadBalancer.createRequestFromLB(eurekaHostSource)
                                                 /**
                                                  * Artificial delay to demonstrate hystrix timeouts and fallbacks.
@@ -92,7 +92,7 @@ public class ClientServerWithResiliencePatterns {
         }
 
         @Override
-        protected Observable<String> getFallback() {
+        protected Observable<String> resumeWithFallback() {
             return Observable.just("Fallback from Hystrix.");
         }
     }

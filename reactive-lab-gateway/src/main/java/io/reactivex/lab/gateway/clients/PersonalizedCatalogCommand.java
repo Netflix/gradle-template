@@ -36,7 +36,7 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
     }
 
     @Override
-    protected Observable<Catalog> run() {
+    protected Observable<Catalog> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/catalog?" + UrlGenerator.generate("userId", users));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())
@@ -47,7 +47,7 @@ public class PersonalizedCatalogCommand extends HystrixObservableCommand<Catalog
     }
     
     @Override
-    protected Observable<Catalog> getFallback() {
+    protected Observable<Catalog> resumeWithFallback() {
         return Observable.from(users).<Catalog>map(u -> {
             try {
                 Map<String, Object> userData = new HashMap<>();

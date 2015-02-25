@@ -36,7 +36,7 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
     }
 
     @Override
-    protected Observable<VideoMetadata> run() {
+    protected Observable<VideoMetadata> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/metadata?" + UrlGenerator.generate("videoId",
                                                                                                               videos));
         return loadBalancer.choose()
@@ -48,7 +48,7 @@ public class VideoMetadataCommand extends HystrixObservableCommand<VideoMetadata
     }
     
     @Override
-    protected Observable<VideoMetadata> getFallback() {
+    protected Observable<VideoMetadata> resumeWithFallback() {
         Map<String, Object> video = new HashMap<>();
         video.put("videoId", videos.get(0).getId());
         video.put("title", "Fallback Video Title");

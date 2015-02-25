@@ -2,8 +2,8 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    compile 'io.reactivex:rxnetty:0.4.0'
-    compile 'io.reactivex:rxjava:1.0.0'
+    compile 'io.reactivex:rxnetty:0.4.6'
+    compile 'io.reactivex:rxjava:1.0.7'
     compile('com.netflix.eureka2:eureka-write-server:2.0.0-DP2') {
         exclude group: 'com.netflix.rxnetty', module: 'rx-netty'
     }
