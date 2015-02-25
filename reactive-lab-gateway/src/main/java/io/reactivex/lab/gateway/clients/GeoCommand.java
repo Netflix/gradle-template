@@ -27,7 +27,7 @@ public class GeoCommand extends HystrixObservableCommand<GeoIP> {
     }
 
     @Override
-    protected Observable<GeoIP> run() {
+    protected Observable<GeoIP> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/geo?" + UrlGenerator.generate("ip", ips));
         return loadBalancer.choose()
                            .map(holder -> holder.getClient())

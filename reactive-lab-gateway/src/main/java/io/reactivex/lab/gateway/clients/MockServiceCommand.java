@@ -25,7 +25,7 @@ public class MockServiceCommand extends HystrixObservableCommand<BackendResponse
                 .andCommandKey(HystrixCommandKey.Factory.asKey("MiddleTier"))
                 .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                         .withExecutionIsolationSemaphoreMaxConcurrentRequests(5)
-                        .withExecutionIsolationThreadTimeoutInMilliseconds(200))); // change this timeout to <= 80 to see fallbacks
+                        .withExecutionTimeoutInMilliseconds(200))); // change this timeout to <= 80 to see fallbacks
         this.id = id;
         this.numItems = numItems;
         this.itemSize = itemSize;
@@ -33,13 +33,14 @@ public class MockServiceCommand extends HystrixObservableCommand<BackendResponse
     }
 
     @Override
-    protected Observable<BackendResponse> run() {
+    protected Observable<BackendResponse> construct() {
         return RxNetty.createHttpClient("localhost", 9100)
                 .submit(HttpClientRequest.createGet("/mock.json?numItems=" + numItems + "&itemSize=" + itemSize + "&delay=" + delay + "&id=" + id))
                 .flatMap((HttpClientResponse<ByteBuf> r) -> r.getContent().map(b -> BackendResponse.fromJson(new ByteBufInputStream(b))));
     }
 
-    protected Observable<BackendResponse> getFallback() {
+    @Override
+    protected Observable<BackendResponse> resumeWithFallback() {
         return Observable.just(new BackendResponse(0, delay, numItems, itemSize, new String[] {}));
     }
 }

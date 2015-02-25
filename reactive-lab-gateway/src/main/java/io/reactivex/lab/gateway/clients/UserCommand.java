@@ -29,7 +29,7 @@ public class UserCommand extends HystrixObservableCommand<User> {
     }
 
     @Override
-    protected Observable<User> run() {
+    protected Observable<User> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/user?" + UrlGenerator.generate("userId", userIds));
         return loadBalancer.choose().map(holder -> holder.getClient())
                 .<User>flatMap(client -> client.submit(request)
@@ -42,7 +42,7 @@ public class UserCommand extends HystrixObservableCommand<User> {
     }
     
     @Override
-    protected Observable<User> getFallback() {
+    protected Observable<User> resumeWithFallback() {
         return Observable.from(userIds).map(id -> {
             Map<String, Object> fallback = new HashMap<>();
             fallback.put("userId", id);

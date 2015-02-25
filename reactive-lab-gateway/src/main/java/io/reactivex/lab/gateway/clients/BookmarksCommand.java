@@ -35,7 +35,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
     }
 
     @Override
-    public Observable<Bookmark> run() {
+    public Observable<Bookmark> construct() {
         HttpClientRequest<ByteBuf> request = HttpClientRequest.createGet("/bookmarks?" + UrlGenerator.generate("videoId", videos));
         return loadBalancer.choose()
                 .map(holder -> holder.getClient())
@@ -44,7 +44,7 @@ public class BookmarksCommand extends HystrixObservableCommand<Bookmark> {
                 .retry(1);
     }
 
-    protected Observable<Bookmark> getFallback() {
+    protected Observable<Bookmark> resumeWithFallback() {
         List<Bookmark> bs = new ArrayList<>();
         for (Video v : videos) {
             Map<String, Object> data = new HashMap<>();
