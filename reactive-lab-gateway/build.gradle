@@ -2,12 +2,12 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    compile 'io.reactivex:rxnetty:0.4.6'
-    compile 'io.reactivex:rxjava:1.0.7'
+    compile 'io.reactivex:rxnetty:0.4.8'
+    compile 'io.reactivex:rxjava:1.0.10'
     compile "com.netflix.eureka2:eureka-client:2.0.0-DP2"
     compile "com.netflix.ocelli:ocelli-rxnetty:0.0.5"
     compile "com.netflix.ocelli:ocelli-eureka:0.0.5"
-    compile 'com.netflix.hystrix:hystrix-core:1.4.0'
+    compile 'com.netflix.hystrix:hystrix-core:1.4.6'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     testCompile 'junit:junit-dep:4.10'

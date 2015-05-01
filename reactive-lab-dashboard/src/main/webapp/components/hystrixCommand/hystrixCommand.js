@@ -169,7 +169,7 @@
             assertNotNull(data,"propertyValue_circuitBreakerErrorThresholdPercentage");
             assertNotNull(data,"propertyValue_circuitBreakerForceOpen");
             assertNotNull(data,"propertyValue_executionIsolationStrategy");
-            assertNotNull(data,"propertyValue_executionIsolationThreadTimeoutInMilliseconds");
+            //assertNotNull(data,"propertyValue_executionIsolationThreadTimeoutInMilliseconds");
             assertNotNull(data,"propertyValue_executionIsolationThreadInterruptOnTimeout");
             // assertNotNull(data,"propertyValue_executionIsolationThreadPoolKeyOverride");
             assertNotNull(data,"propertyValue_executionIsolationSemaphoreMaxConcurrentRequests");
