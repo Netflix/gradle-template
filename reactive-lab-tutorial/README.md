@@ -2,7 +2,7 @@
 
 This tutorial introduces you to the following libraries:
  
- - [RxNetty](https://github.com/ReactiveX/RxJava): Reactive Extensions for the JVM.
+ - [RxJava](https://github.com/ReactiveX/RxJava): Reactive Extensions for the JVM.
  - [RxNetty](https://github.com/ReactiveX/RxNetty): Reactive Extensions to Netty. This is the core networking library of Netflix.
  - [Eureka 2.x](https://github.com/Netflix/eureka/tree/2.x): New version of eureka; Netflix's service discovery system. 
  - Ocelli: Ocelli is an independent project focusing on load balancing needs. 
