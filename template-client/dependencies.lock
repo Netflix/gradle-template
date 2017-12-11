@@ -1,0 +1,138 @@
+{
+    "compileClasspath": {
+        "com.sun.jersey:jersey-client": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.6.3",
+            "requested": "1.6.3"
+        }
+    },
+    "default": {
+        "com.sun.jersey:jersey-client": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.6.3",
+            "requested": "1.6.3"
+        }
+    },
+    "junitPlatform": {
+        "org.junit.platform:junit-platform-console": {
+            "locked": "1.0.2"
+        },
+        "org.junit.platform:junit-platform-launcher": {
+            "locked": "1.0.2"
+        }
+    },
+    "runtimeClasspath": {
+        "com.sun.jersey:jersey-client": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.6.3",
+            "requested": "1.6.3"
+        }
+    },
+    "testCompile": {
+        "org.junit.jupiter:junit-jupiter-api": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        }
+    },
+    "testCompileClasspath": {
+        "com.sun.jersey:jersey-client": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.apiguardian:apiguardian-api": {
+            "locked": "1.0.0",
+            "requested": "1.0.0"
+        },
+        "org.junit.jupiter:junit-jupiter-api": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.6.3",
+            "requested": "1.6.3"
+        }
+    },
+    "testCompileOnly": {
+        "org.apiguardian:apiguardian-api": {
+            "locked": "1.0.0",
+            "requested": "1.0.0"
+        }
+    },
+    "testRuntime": {
+        "org.junit.jupiter:junit-jupiter-api": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        },
+        "org.junit.jupiter:junit-jupiter-engine": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        }
+    },
+    "testRuntimeClasspath": {
+        "com.sun.jersey:jersey-client": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.junit.jupiter:junit-jupiter-api": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        },
+        "org.junit.jupiter:junit-jupiter-engine": {
+            "locked": "5.0.2",
+            "requested": "5.0.2"
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.6.3",
+            "requested": "1.6.3"
+        }
+    }
+}
