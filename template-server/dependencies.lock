@@ -1,0 +1,355 @@
+{
+    "compile": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "compileClasspath": {
+        "com.netflix.gradle-template-master:template-client": {
+            "project": true
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-server": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-servlet": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.servlet:servlet-api": {
+            "locked": "2.5",
+            "requested": "2.5"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        }
+    },
+    "compileOnly": {
+        "javax.servlet:servlet-api": {
+            "locked": "2.5",
+            "requested": "2.5"
+        }
+    },
+    "default": {
+        "com.netflix.gradle-template-master:template-client": {
+            "project": true
+        },
+        "com.sun.jersey:jersey-client": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-server": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-servlet": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.6.3"
+        }
+    },
+    "grettyProductRuntime": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "grettyProvidedCompile": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "grettyRunnerJetty7": {
+        "org.akhikhl.gretty:gretty-runner-jetty7": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerJetty8": {
+        "org.akhikhl.gretty:gretty-runner-jetty8": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerJetty9": {
+        "org.akhikhl.gretty:gretty-runner-jetty9": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerJetty93": {
+        "org.akhikhl.gretty:gretty-runner-jetty93": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerJetty94": {
+        "org.akhikhl.gretty:gretty-runner-jetty94": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerTomcat7": {
+        "org.akhikhl.gretty:gretty-runner-tomcat7": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettyRunnerTomcat8": {
+        "org.akhikhl.gretty:gretty-runner-tomcat8": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "grettySpringLoaded": {
+        "org.springframework:springloaded": {
+            "locked": "1.2.5.RELEASE",
+            "requested": "1.2.5.RELEASE"
+        }
+    },
+    "grettyStarter": {
+        "org.akhikhl.gretty:gretty-starter": {
+            "locked": "2.0.0",
+            "requested": "2.0.0"
+        }
+    },
+    "providedCompile": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "providedRuntime": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "runtime": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "runtimeClasspath": {
+        "com.netflix.gradle-template-master:template-client": {
+            "project": true
+        },
+        "com.sun.jersey:jersey-client": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-server": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-servlet": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.6.3"
+        }
+    },
+    "springBoot": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "testCompile": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "testCompileClasspath": {
+        "com.netflix.gradle-template-master:template-client": {
+            "project": true
+        },
+        "com.sun.jersey:jersey-core": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-server": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-servlet": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        }
+    },
+    "testRuntime": {
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        }
+    },
+    "testRuntimeClasspath": {
+        "com.netflix.gradle-template-master:template-client": {
+            "project": true
+        },
+        "com.sun.jersey:jersey-client": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11"
+        },
+        "com.sun.jersey:jersey-core": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-server": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "com.sun.jersey:jersey-servlet": {
+            "locked": "1.11",
+            "requested": "1.11"
+        },
+        "javax.servlet:javax.servlet-api": {
+            "locked": "3.1.0",
+            "requested": "3.1.0"
+        },
+        "javax.websocket:javax.websocket-api": {
+            "locked": "1.0",
+            "requested": "1.0"
+        },
+        "javax.ws.rs:jsr311-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.1.1",
+            "requested": "1.1.1"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.gradle-template-master:template-client"
+            ],
+            "locked": "1.6.3"
+        }
+    }
+}

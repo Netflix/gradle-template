@@ -1,0 +1,15 @@
+plugins {
+    id 'war'
+    id 'org.akhikhl.gretty' version '2.0.0'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    implementation 'javax.ws.rs:jsr311-api:1.1.1'
+    implementation 'com.sun.jersey:jersey-core:1.11'
+    implementation 'com.sun.jersey:jersey-server:1.11'
+    implementation 'com.sun.jersey:jersey-servlet:1.11'
+    implementation project(':template-client')
+    compileOnly 'javax.servlet:servlet-api:2.5'
+}
