@@ -1,14 +1,5 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
-    }
-}
-
 plugins {
-    id 'nebula.netflixoss' version '4.1.0'
+    id 'nebula.netflixoss' version '8.8.1'
 }
 
 // Establish version and status
